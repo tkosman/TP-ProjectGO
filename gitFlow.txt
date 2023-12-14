@@ -1,0 +1,16 @@
+Praca nad nowym feauturem:
+1. Jesteś na branchu "main" i nie masz żadnych innych branchy.
+2. git pull (pobiera rzeczy z remote/main)
+3. git checkout -b {nazwa nowego featura}
+4. git add (na nowym branchu)
+5. git commit -m {message} -m {description}
+6. git push -u origin {!!!nazwa brancha!!!} (potem -> git push)
+7. Robimy merge requesta na github.com (dopiero po zakończeniu pracy na featurem)
+8. Po zmergowaniu:
+    a. usuń remote branch (na github.com)
+    b. git branch -d {nazwa_brancha} (usuń local branch)
+
+Praca nad tym samym featurem:
+1. Na lokalnym branchu main robimy git pull
+2. Kontunuujemy pracę na naszym feature branchu
+3. Go to pkt. 4 powyżej.
