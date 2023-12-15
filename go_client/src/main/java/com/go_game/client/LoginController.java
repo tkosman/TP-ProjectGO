@@ -63,6 +63,7 @@ public class LoginController {
         assert passwordTextField != null : "fx:id=\"passwordTextField\" was not injected: check your FXML file 'login.fxml'.";
         assert registerButton != null : "fx:id=\"registerButton\" was not injected: check your FXML file 'login.fxml'.";
         assert statusLabel != null : "fx:id=\"statusLabel\" was not injected: check your FXML file 'login.fxml'.";
+
     }
 
 
@@ -75,7 +76,7 @@ public class LoginController {
 
         if (loginStatus == LoginStatusEnum.SUCCESSFUL) {
             try {
-                App.setRoot("game");
+                App.setRoot("menu");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -98,6 +99,7 @@ public class LoginController {
 
         if (login.isEmpty() || password.isEmpty()) {
             displayError("Login or password empty.");
+            return;
         }
 
         RegisterStatusEnum registerStatus = LoginManager.register(login, password);

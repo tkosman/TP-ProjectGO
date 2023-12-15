@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+import com.go_game.client.game_model.ColorEnum;
+
 /**
  * JavaFX App
  */
@@ -18,8 +20,11 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("login"), 640, 480);
+        scene = new Scene(loadFXML("login"), 900, 600);
         stage.setScene(scene);
+
+        stage.setMinWidth(900);
+        stage.setMinHeight(600);
 
         Image icon = new Image(App.class.getResource("logo.png").toExternalForm());
         stage.getIcons().add(icon);
@@ -28,7 +33,7 @@ public class App extends Application {
         stage.show();
     }
 
-    static void setRoot(String fxml) throws IOException {
+    public static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
 
