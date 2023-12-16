@@ -107,3 +107,11 @@ Axis {
     -fx-background-color: #7500ac; /* Transparent background on hover */
     -fx-border-color: #af00ff; /* Darker green color for the border on hover */
 }
+
+#eloLineChart {
+    -fx-background-color: #2b2b2b; /* Dark background color for LineChart */
+}
+
+#eloLineChart .chart-plot-background {
+    -fx-background-color: #2b2b2b;
+}
