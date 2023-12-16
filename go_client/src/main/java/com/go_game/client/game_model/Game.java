@@ -3,6 +3,7 @@ package com.go_game.client.game_model;
 import java.util.ArrayList;
 
 public class Game {
+    private Integer ID;
     private Integer x = null;
     private Player black;
     private Player white;
@@ -28,6 +29,26 @@ public class Game {
         this.state = state;
     }
 
+    public Game(int x, Player black, Player white, ArrayList<String> state, int id) {
+        this.x = x;
+        this.black = black;
+        this.white = white;
+        this.state = state;
+        this.ID = id;
+    }
+
+
+    public int getID() {
+        return this.ID;
+    }
+
+    public void setID(int iD) {
+        if (this.ID != null) {
+            throw new IllegalArgumentException("ID alerady set");
+        }
+
+        this.ID = iD;
+    }
 
     public void setX(int x) throws IllegalArgumentException {
         if (this.x != null) {

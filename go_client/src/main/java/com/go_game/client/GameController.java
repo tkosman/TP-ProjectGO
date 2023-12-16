@@ -29,18 +29,20 @@ public class GameController {
     void initialize() {
         assert mainAnchorPane != null : "fx:id=\"mainAnchorPane\" was not injected: check your FXML file 'game.fxml'.";
         
-        // ask server for game manifest
-        // get x from server message
+        // ask server for the game manifest and build the Game based on it
+
         // WARNING: temporary code
         int x = 13;
-        Player pl1 = new Player("Ala", 1500);
-        Player pl2 = new Player("Bob", 1375);
+        Player pl1 = new Player(1, "Ala", 1500);
+        Player pl2 = new Player(2, "Bob", 1375);
         // end of temporary code
 
         this.gb = new GameBuilder();
         this.gb.setX(x).setBlackPlayer(pl1).setWhitePlayer(pl2);
         this.game = this.gb.build();
+        
+        assert this.game != null : "failed to buidl Game";
     }
 
-    
+
 }

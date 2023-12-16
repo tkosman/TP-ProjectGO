@@ -3,6 +3,7 @@ package com.go_game.client.game_model;
 import java.util.ArrayList;
 
 public class GameBuilder {
+    private int ID;
     private Integer x;
     private Player black;
     private Player white; 
@@ -10,6 +11,12 @@ public class GameBuilder {
 
     public GameBuilder() {
         this.state = new ArrayList<>();
+    }
+
+    
+    public GameBuilder setID(int id) {
+        this.ID = id;
+        return this;
     }
 
     public GameBuilder setX(int x) {
@@ -42,7 +49,7 @@ public class GameBuilder {
         }
 
         try {
-            return new Game(x, black, white, state);
+            return new Game(this.x, this.black, this.white, this.state, this.ID);
         } catch (IllegalArgumentException e) {
             return null;
         }

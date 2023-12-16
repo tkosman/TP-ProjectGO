@@ -1,11 +1,13 @@
 package com.go_game.client.game_model;
 
 public class Player {
+    private int ID;
     private String name;
     private int elo;
-    
 
-    public Player(String name, int elo){
+
+    public Player(int id, String name, int elo){
+        this.ID = id;
         this.name = name;
         this.elo = elo;
     }
