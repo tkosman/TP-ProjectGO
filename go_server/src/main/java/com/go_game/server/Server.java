@@ -2,8 +2,6 @@ package com.go_game.server;
 
 import java.io.*;
 import java.net.*;
-import javax.swing.*;
-import java.awt.*;
 import java.util.Date;
 
 public class Server
@@ -34,7 +32,7 @@ public class Server
                 new DataOutputStream(secondPlayer.getOutputStream()).writeInt(PLAYER2);
 
                 System.out.println(new Date() + "\nStart a thread for session " + sessionNo++ + "\n");
-                //! Here start game thread for this session
+                //! Here start game thread for this session -> GameLogicThread
             }
         } catch (IOException ex) {
             System.out.println("Server exception: " + ex.getMessage());
