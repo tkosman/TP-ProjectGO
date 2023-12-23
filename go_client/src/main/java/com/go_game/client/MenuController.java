@@ -3,14 +3,25 @@ package com.go_game.client;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class MenuController {
 
@@ -79,9 +90,9 @@ public class MenuController {
         assert select19x19Button != null : "fx:id=\"select19x19Button\" was not injected: check your FXML file 'menu.fxml'.";
         assert select9x9Button != null : "fx:id=\"select9x9Button\" was not injected: check your FXML file 'menu.fxml'.";
 
-        select13x13Button.setOnAction(event ->startXxXGame(13));
-        select19x19Button.setOnAction(event ->startXxXGame(19));
-        select9x9Button.setOnAction(event ->startXxXGame(9));
+        select13x13Button.setOnAction(event -> startXxXGame(13));
+        select19x19Button.setOnAction(event -> startXxXGame(19));
+        select9x9Button.setOnAction(event -> startXxXGame(9));
 
     }
 
@@ -99,13 +110,77 @@ public class MenuController {
 
     
     
-    private void startXxXGame(int x){
+    private void startXxXGame(int x) {
         // TODO: send x to server
 
-        try {
-            App.setRoot("game");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        gameModeAlert(x);
+
     }
+
+    private void gameModeAlert(int x) {
+        Alert alert = new Alert(AlertType.NONE, "", ButtonType.CLOSE);
+        alert.initStyle(StageStyle.UNDECORATED);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
+        alert.getDialogPane().setPrefSize(300, 300);
+
+        VBox gameModeSelectVBox = new VBox(5);
+        gameModeSelectVBox.setAlignment(Pos.CENTER);
+
+        Image pvpIcon = new Image(App.class.getResource("pvp.png").toExternalForm());
+        Image botIcon = new Image(App.class.getResource("bot.png").toExternalForm());
+
+        double scaledWidth = 50;
+        double scaledHeight = 50;
+
+        ImageView pvpImageView = new ImageView(pvpIcon);
+        pvpImageView.setFitWidth(scaledWidth);
+        pvpImageView.setFitHeight(scaledHeight);
+
+        ImageView botImageView = new ImageView(botIcon);
+        botImageView.setFitWidth(scaledWidth);
+        botImageView.setFitHeight(scaledHeight);
+
+        Label titleLable = new Label("Select game mode");
+
+        Button pvpButton = new Button("Play PvP", pvpImageView);
+        Button botButton = new Button("Play Bot", botImageView);
+
+        pvpButton.setMaxWidth(Double.MAX_VALUE);
+        botButton.setMaxWidth(Double.MAX_VALUE);
+
+        pvpButton.setOnAction(event -> {
+            alert.setResult(ButtonType.OK);
+            alert.close();
+            
+            try {
+                App.setRoot("game");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        botButton.setOnAction(event -> {
+            alert.setResult(ButtonType.OK);
+            alert.close();
+
+            try {
+                App.setRoot("game");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        gameModeSelectVBox.getChildren().addAll(titleLable, pvpButton, botButton);
+        VBox.setVgrow(pvpButton, Priority.ALWAYS);
+        VBox.setVgrow(botButton, Priority.ALWAYS);
+
+        alert.getDialogPane().setContent(gameModeSelectVBox);
+
+        alert.showAndWait();
+    }
+
+    private void matchmakingAlert() {
+
+    } 
+
 }

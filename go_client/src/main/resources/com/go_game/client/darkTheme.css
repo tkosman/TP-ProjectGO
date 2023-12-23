@@ -1,117 +1,55 @@
-#mainAnchorPane {
-    -fx-background-color: #212121; /* Dark background color */
+/* Colors */
+#mainAnchorPane, #menuHBox, #leftPanelVBox, #middlePanelVBox, #rightPanelVBox {
+    -fx-background-color: #2b2b2b;
+    -fx-padding: 5;
 }
 
-#menuHBox {
-    -fx-background-color: #2b2b2b; /* Darker background color for the menu */
-    -fx-spacing: 10;
-}
-
-#leftPanelVBox, #middlePanelVBox, #rightPanelVBox {
-    -fx-background-color: #2b2b2b; /* Darker background color for the panels */
-    -fx-padding: 10;
-}
-
+/* Labels */
 Label {
-    -fx-text-fill: #ffffff; /* White text color for labels */
+    -fx-text-fill: #ffffff;
 }
 
+/* ListViews */
 ListView {
-    -fx-control-inner-background: #3a3a3a; /* Darker background color for ListView */
-    -fx-text-fill: #ffffff; /* White text color for ListView items */
+    -fx-control-inner-background: #3a3a3a;
+    -fx-text-fill: #ffffff;
 }
 
-Button {
-    -fx-background-color: #af00ff; /* Green background color for buttons */
-    -fx-text-fill: #ffffff; /* White text color for buttons */
+/* Buttons */
+Button, #middlePanelVBox Button {
+    -fx-background-color: #af00ff;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 0; 
+    -fx-border-color: #af00ff; 
+    -fx-border-width: 2; 
 }
 
-Button:hover {
-    -fx-background-color: #af00ff; /* Darker green color on hover */
+Button:hover, #middlePanelVBox Button:hover {
+    -fx-background-color: #7500ac;
 }
 
+/* LineChart */
 LineChart {
-    -fx-background-color: #2b2b2b; /* Darker background color for LineChart */
-    -fx-stroke: #af00ff; /* Green color for the chart line */
+    -fx-background-color: #2b2b2b;
 }
 
+/* Axes */
 Axis {
-    -fx-tick-label-fill: #ffffff; /* White color for axis tick labels */
-    -fx-tick-mark-stroke: #ffffff; /* White color for axis tick marks */
+    -fx-tick-label-fill: #ffffff;
+    -fx-tick-mark-stroke: #ffffff;
 }
 
-#middlePanelVBox Button {
-    -fx-background-color: #af00ff; /* Green background color for buttons */
-    -fx-text-fill: #ffffff; /* White text color for buttons */
-    -fx-background-radius: 0; /* Sharp corners for the buttons */
-    -fx-border-color: #af00ff; /* Green border color */
-    -fx-border-width: 2; /* Border width */
-}
-
-#middlePanelVBox Button:hover {
-    -fx-background-color: #7500ac; /* Transparent background on hover */
-    -fx-border-color: #af00ff; /* Darker green color for the border on hover */
-}
-
-#mainAnchorPane {
-    -fx-background-color: #212121; /* Dark background color */
-}
-
-#menuHBox {
-    -fx-background-color: #2b2b2b; /* Darker background color for the menu */
-    -fx-spacing: 10;
-}
-
-#leftPanelVBox, #middlePanelVBox, #rightPanelVBox {
-    -fx-background-color: #2b2b2b; /* Darker background color for the panels */
-    -fx-padding: 10;
-}
-
-Label {
-    -fx-text-fill: #ffffff; /* White text color for labels */
-}
-
-ListView {
-    -fx-control-inner-background: #3a3a3a; /* Darker background color for ListView */
-    -fx-text-fill: #ffffff; /* White text color for ListView items */
-}
-
-Button {
-    -fx-background-color: #af00ff; /* Green background color for buttons */
-    -fx-text-fill: #ffffff; /* White text color for buttons */
-}
-
-Button:hover {
-    -fx-background-color: #af00ff; /* Darker green color on hover */
-}
-
-LineChart {
-    -fx-background-color: #2b2b2b; /* Darker background color for LineChart */
-    -fx-stroke: #af00ff; /* Green color for the chart line */
-}
-
-Axis {
-    -fx-tick-label-fill: #ffffff; /* White color for axis tick labels */
-    -fx-tick-mark-stroke: #ffffff; /* White color for axis tick marks */
-}
-
-#middlePanelVBox Button {
-    -fx-background-color: #af00ff; /* Green background color for buttons */
-    -fx-text-fill: #ffffff; /* White text color for buttons */
-    -fx-background-radius: 0; /* Sharp corners for the buttons */
-    -fx-border-color: #af00ff; /* Green border color */
-    -fx-border-width: 2; /* Border width */
-}
-
-#middlePanelVBox Button:hover {
-    -fx-background-color: #7500ac; /* Transparent background on hover */
-    -fx-border-color: #af00ff; /* Darker green color for the border on hover */
-}
-
+/* Specific LineChart */
 #eloLineChart {
-    -fx-background-color: #2b2b2b; /* Dark background color for LineChart */
+    -fx-background-color: #2b2b2b;
 }
 
 #eloLineChart .chart-plot-background {
     -fx-background-color: #2b2b2b;
+}
+
+/* Alerts */
+.alert {
+    -fx-background-color: #2E2E2E;
+    -fx-text-fill: white;
 }

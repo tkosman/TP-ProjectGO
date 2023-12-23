@@ -12,7 +12,7 @@ public class Player {
         this.elo = elo;
     }
 
-
+    
     public String getName() {
         return name;
     }

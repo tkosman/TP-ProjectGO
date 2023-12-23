@@ -9,8 +9,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-import com.go_game.client.game_model.ColorEnum;
-
 /**
  * JavaFX App
  */
@@ -29,6 +27,8 @@ public class App extends Application {
         Image icon = new Image(App.class.getResource("logo.png").toExternalForm());
         stage.getIcons().add(icon);
         stage.setTitle("go");
+
+        scene.getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
 
         stage.show();
     }
