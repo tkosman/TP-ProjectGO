@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -17,14 +18,14 @@ import java.io.IOException;
 public class App extends Application {
 
     private static Scene scene;
-    private static final Duration FADE_DURATION = Duration.millis(700);
+    public static final Duration FADE_DURATION = Duration.millis(700);
 
     @Override
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("login"), 900, 600);
 
-        // Set the background color to black
-        scene.setFill(javafx.scene.paint.Color.BLACK);
+        scene.getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
+        scene.setFill(Paint.valueOf("#2E2E2E"));
 
         stage.setScene(scene);
 
@@ -34,8 +35,6 @@ public class App extends Application {
         Image icon = new Image(App.class.getResource("logo.png").toExternalForm());
         stage.getIcons().add(icon);
         stage.setTitle("go");
-
-        scene.getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
 
         stage.show();
     }
