@@ -1,11 +1,13 @@
 package com.go_game.client;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
 
@@ -15,10 +17,15 @@ import java.io.IOException;
 public class App extends Application {
 
     private static Scene scene;
+    private static final Duration FADE_DURATION = Duration.millis(700);
 
     @Override
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("login"), 900, 600);
+
+        // Set the background color to black
+        scene.setFill(javafx.scene.paint.Color.BLACK);
+
         stage.setScene(scene);
 
         stage.setMinWidth(900);
@@ -34,7 +41,20 @@ public class App extends Application {
     }
 
     public static void setRoot(String fxml) throws IOException {
-        scene.setRoot(loadFXML(fxml));
+        Parent newRoot = loadFXML(fxml);
+
+        // Set the background color of the new scene to black
+        newRoot.setStyle("fade-background");
+
+        // Overlay the new scene on top of the old scene
+        newRoot.setOpacity(0.0);
+        scene.setRoot(newRoot);
+
+        // Create a fade transition for fade-in
+        FadeTransition fadeTransition = new FadeTransition(FADE_DURATION, newRoot);
+        fadeTransition.setFromValue(0.0);
+        fadeTransition.setToValue(1.0);
+        fadeTransition.play();
     }
 
     private static Parent loadFXML(String fxml) throws IOException {

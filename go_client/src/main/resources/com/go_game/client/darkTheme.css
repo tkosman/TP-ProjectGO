@@ -53,3 +53,11 @@ Axis {
     -fx-background-color: #2E2E2E;
     -fx-text-fill: white;
 }
+
+.anchor-pane {
+    -fx-background-color: #2E2E2E;
+}
+
+.fade-background {
+    -fx-background-color: #212121;
+}
