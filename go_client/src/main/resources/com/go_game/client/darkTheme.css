@@ -61,3 +61,7 @@ Axis {
 .fade-background {
     -fx-background-color: #212121;
 }
+
+.game-circle {
+    -fx-fill: #3E3E3E;
+}
