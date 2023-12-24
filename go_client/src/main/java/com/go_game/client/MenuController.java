@@ -6,8 +6,12 @@ import java.util.ResourceBundle;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.animation.PauseTransition;
+import javafx.animation.RotateTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
 import javafx.scene.control.Alert;
@@ -20,8 +24,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Arc;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 public class MenuController {
 
@@ -149,14 +155,25 @@ public class MenuController {
         botButton.setMaxWidth(Double.MAX_VALUE);
 
         pvpButton.setOnAction(event -> {
-            alert.setResult(ButtonType.OK);
-            alert.close();
+            gameModeSelectVBox.getChildren().clear();
+            Platform.runLater(() -> {
+                gameModeSelectVBox.getChildren().add(matchmakingAlert());
+            });            
             
-            try {
-                App.setRoot("game");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // TODO: change the 4s duration to wait untill oponent found
+            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(4));
+            pauseTransition.setOnFinished(e -> {
+                alert.setResult(ButtonType.OK);
+                alert.close();
+
+                try {
+                    App.setRoot("game");
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            pauseTransition.play();
         });
 
         botButton.setOnAction(event -> {
@@ -179,8 +196,41 @@ public class MenuController {
         alert.showAndWait();
     }
 
-    private void matchmakingAlert() {
+    private Node matchmakingAlert() {
+        // Create an Arc (circle segment) to represent the spinning circle
+        Arc coloredArc = new Arc();
+        coloredArc.setCenterX(50);
+        coloredArc.setCenterY(50);
+        coloredArc.setRadiusX(50);
+        coloredArc.setRadiusY(50);
+        coloredArc.setStartAngle(45);
+        coloredArc.setLength(270);
+        coloredArc.setStroke(Color.web("#212121"));
+        coloredArc.setStrokeWidth(10);
+        coloredArc.setFill(Color.TRANSPARENT);
 
-    } 
+        Arc notchArc = new Arc();
+        notchArc.setCenterX(50);
+        notchArc.setCenterY(50);
+        notchArc.setRadiusX(50);
+        notchArc.setRadiusY(50);
+        notchArc.setStartAngle(315);
+        notchArc.setLength(90);
+        notchArc.setStroke(Color.web("#af00ff"));
+        notchArc.setStrokeWidth(10);
+        notchArc.setFill(Color.TRANSPARENT);
 
+        Group circle = new Group();
+        circle.getChildren().addAll(coloredArc, notchArc);
+
+
+        // Create a RotateTransition to make the coloredArc spin
+        RotateTransition rotateTransition = new RotateTransition(Duration.seconds(2),  circle);
+        rotateTransition.setByAngle(360);
+        rotateTransition.setCycleCount(RotateTransition.INDEFINITE);
+        rotateTransition.play();
+
+        return circle;
+    }
+    
 }

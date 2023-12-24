@@ -40,7 +40,7 @@ public class GameController {
 
     @FXML
     private void initialize() {
-        int gridSize = 19;
+        int gridSize = 11;
         int circleRadius = 15;
         int spacing = 5;
 
