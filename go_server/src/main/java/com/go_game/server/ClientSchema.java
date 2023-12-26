@@ -37,7 +37,7 @@ public class ClientSchema implements Runnable
             // DataOutputStream toServer = new DataOutputStream(socket.getOutputStream());
 
             int player = fromServer.readInt();
-            whoIsPlayer = (player == '1') ? typeOfPlayers.PLAYER1 : typeOfPlayers.PLAYER2;
+            whoIsPlayer = (player == 1) ? typeOfPlayers.PLAYER1 : typeOfPlayers.PLAYER2;
             System.out.println("You are player " + whoIsPlayer + "\n");
 
             Thread fred = new Thread(this);
