@@ -3,20 +3,41 @@ package com.go_game.server;
 import java.io.*;
 import java.net.*;
 import java.util.Date;
-import java.util.Queue;
 
 import com.go_game.server.enums.GameMode;
 import com.go_game.server.messages.ClientInfoMsg;
 import com.go_game.server.messages.IndexSetMsg;
-
-import main.java.com.go_game.server.enums.BoardSize;
+import com.go_game.server.enums.BoardSize;
 
 public class Server
 {
     //TODO: change if online server is implemented
     private static final int PORT = 4444;
     private static int player_index = 1;
-    //! to be refactored
+    
+    /*
+    * add Client connection class sth like:
+    public class ClientConnection {
+        private Socket socket;
+        private ObjectOutputStream outputStream;
+        private ObjectInputStream inputStream;
+        
+        public ClientConnection(Socket socket) throws IOException {
+            this.socket = socket;
+            this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.inputStream = new ObjectInputStream(socket.getInputStream());
+        }
+        
+        public void sendMessage(Object message) throws IOException {
+            outputStream.writeObject(message);
+        }
+        
+        public Object receiveMessage() throws IOException, ClassNotFoundException {
+            return inputStream.readObject();
+        }
+    }
+    */
+    //TODO: to be refactored (look above)
     private static Socket waitingPlayer9x9 = null;
     private static ObjectInputStream fromWaitingPlayer9x9;
     private static ObjectOutputStream toWaitingPlayer9x9;
@@ -95,48 +116,13 @@ public class Server
                             System.out.println("NINETEEN_X_NINETEEN");
                             assert false : "To be implemented"; //TODO: implement
                         }
-                        else
-                        {
-                            assert false : "Unknown board size";
-                        }
+                        else { assert false : "Unknown board size"; }
                     }
-                    else
-                    {
-                        assert false : "Unknown game mode";
-                    }
-
-                    // toClient.close();
-                    // fromClient.close();
-
-
-
-
-
-                    //TODO: lookup for a player with the same game mode and pair them, if no player with the same game mode is found, add this player to the queue
-                    //TODO: If paired with another player, start a new thread for this game session
-
+                    else { assert false : "Unknown game mode"; }
 
                 }
                 catch (ClassNotFoundException e) { e.printStackTrace(); }
             }
-
-
-
-            // int sessionNo = 1;
-            // while (true) {
-            //     System.out.println(new Date() + "\nWaiting for players to join session " + sessionNo + "\n");
-
-            //     Socket firstPlayer = serverSocket.accept();
-            //     System.out.println(new Date() + "\nPlayer 1 joined session " + sessionNo + "with IP address" + firstPlayer.getInetAddress().getHostAddress() + "\n");
-            //     new DataOutputStream(firstPlayer.getOutputStream()).writeInt(PLAYER1);
-
-            //     Socket secondPlayer = serverSocket.accept();
-            //     System.out.println(new Date() + "\nPlayer 2 joined session " + sessionNo + "with IP address" + secondPlayer.getInetAddress().getHostAddress() + "\n");
-            //     new DataOutputStream(secondPlayer.getOutputStream()).writeInt(PLAYER2);
-
-            //     System.out.println(new Date() + "\nStart a thread for session " + sessionNo++ + "\n");
-            //     //! Here start game thread for this session -> GameLogicThread
-            // }
         } catch (IOException ex) {
             System.out.println("Server exception: " + ex.getMessage());
             ex.printStackTrace();

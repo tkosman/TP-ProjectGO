@@ -8,9 +8,7 @@ import java.net.Socket;
 import com.go_game.server.messages.ClientInfoMsg;
 import com.go_game.server.messages.IndexSetMsg;
 import com.go_game.server.messages.OkMsg;
-
-import main.java.com.go_game.server.enums.BoardSize;
-
+import com.go_game.server.enums.BoardSize;
 import com.go_game.server.enums.GameMode;
 
 //! Please write your javaFX client based on this class
@@ -52,7 +50,9 @@ public class ClientSchema
             //! 3 OUT
             toServer.writeObject(new ClientInfoMsg(BoardSize.NINE_X_NINE, GameMode.MULTI_PLAYER));
 
-            //! for debuging puproses
+            //! from now on handshake finishes and game starts
+
+            //! 4 for debugging
             System.out.println((OkMsg)fromServer.readObject());
 
             // Thread fred = new Thread(this);
@@ -62,7 +62,6 @@ public class ClientSchema
             System.err.println(ex);
         }
     }
-
     /*
     @Override
     public void run()
