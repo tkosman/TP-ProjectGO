@@ -37,6 +37,7 @@ public class ClientInfoMsg extends AbstractMessage
         return "ClientInfo{\n" +
                 "\ttype = " + type +
                 "\n\tboardSize = " + boardSize +
+                "\n\tgameMode = " + gameMode +
                 "\n}";
     }
 }
