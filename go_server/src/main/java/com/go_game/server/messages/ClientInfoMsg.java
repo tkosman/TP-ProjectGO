@@ -1,15 +1,29 @@
 package com.go_game.server.messages;
 
+import com.go_game.server.enums.GameMode;
 import com.go_game.server.enums.MessageType;
 
-public class ClientInfo extends AbstractMessage
+public class ClientInfoMsg extends AbstractMessage
 {
     private int boardSize;
+    private GameMode gameMode;
 
-    public ClientInfo(int boardSize)
+    public ClientInfoMsg(int boardSize, GameMode gameMode)
     {
         type = MessageType.CLIENT_INFO;
         this.boardSize = boardSize;
+        this.gameMode = gameMode;
+    }
+
+    public ClientInfoMsg(GameMode gameMode)
+    {
+        type = MessageType.CLIENT_INFO;
+        this.gameMode = gameMode;
+    }
+    
+    public GameMode getGameMode()
+    {
+        return gameMode;
     }
 
     public int getBoardSize()
