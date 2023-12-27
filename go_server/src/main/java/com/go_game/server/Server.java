@@ -3,57 +3,121 @@ package com.go_game.server;
 import java.io.*;
 import java.net.*;
 import java.util.Date;
+import java.util.Queue;
 
+import com.go_game.server.enums.GameMode;
 import com.go_game.server.messages.ClientInfoMsg;
 import com.go_game.server.messages.IndexSetMsg;
+
+import main.java.com.go_game.server.enums.BoardSize;
 
 public class Server
 {
     //TODO: change if online server is implemented
     private static final int PORT = 4444;
     private static int player_index = 1;
+    //! to be refactored
+    private static Socket waitingPlayer9x9 = null;
+    private static ObjectInputStream fromWaitingPlayer9x9;
+    private static ObjectOutputStream toWaitingPlayer9x9;
 
     public static void main(String[] args)
     {
         new Server().runServer();;
     }
-
+    
     private void runServer()
     {
         try (ServerSocket serverSocket = new ServerSocket(PORT))
         {
-            System.out.println(new Date() + "Server started successfully at port " + PORT + "\n");
+            System.out.println(new Date() + "\nServer started successfully at port " + PORT + "\n");
 
             while (true)
             {
+                //! 1 IN
                 //? Wait for a new player to join
-                Socket newPlayer = serverSocket.accept();
+                Socket clientSocket = serverSocket.accept();
                 //? Create a new output for the newly joined player
-                ObjectOutputStream newPlayerOut = new ObjectOutputStream(newPlayer.getOutputStream());
-                newPlayerOut.writeObject(new IndexSetMsg(player_index));
+                ObjectOutputStream toClient = new ObjectOutputStream(clientSocket.getOutputStream());
+
+                //! 2 OUT
+                toClient.writeObject(new IndexSetMsg(player_index));
                 player_index++; //? Increment player index
 
-                System.out.println(new Date() + "\nPlayer joined session with IP address " + newPlayer.getInetAddress().getHostAddress() + "\n");
+                System.out.println(new Date() + "\nPlayer joined session with IP address " + clientSocket.getInetAddress().getHostAddress() + "\n");
 
-                ObjectInputStream newPlayerIn = new ObjectInputStream(newPlayer.getInputStream());
+                ObjectInputStream fromClient = new ObjectInputStream(clientSocket.getInputStream());
                 try
                 { 
-                    ClientInfoMsg newPlayerInfo = (ClientInfoMsg)newPlayerIn.readObject();
+                    //! 3 IN
+                    ClientInfoMsg newPlayerInfo = (ClientInfoMsg)fromClient.readObject();
                     System.out.println(newPlayerInfo);
 
-                    //TODO: choose game mode
+                    GameMode gameMode = newPlayerInfo.getGameMode();
+                    if (gameMode == GameMode.REPLAY)
+                    {
+                        System.out.println("REPLAY");
+                        //TODO: start a new thread for replay
+                    }
+                    else if (gameMode == GameMode.BOT)
+                    {
+                        System.out.println("BOT");
+                        //TODO: start a new thread for bot
+                    }
+                    else if (gameMode == GameMode.MULTI_PLAYER)
+                    {
+                        BoardSize boardSize = newPlayerInfo.getBoardSize();
+
+                        if(boardSize == BoardSize.NINE_X_NINE)
+                        {
+                            if(waitingPlayer9x9 == null)
+                            {
+                                waitingPlayer9x9 = clientSocket;
+                                fromWaitingPlayer9x9 = fromClient;
+                                toWaitingPlayer9x9 = toClient;
+                            }
+                            else
+                            {
+                                new GameLogicThread(toClient, fromClient, toWaitingPlayer9x9, fromWaitingPlayer9x9, boardSize);
+                                waitingPlayer9x9 = null;
+                                fromWaitingPlayer9x9 = null;
+                                toWaitingPlayer9x9 = null;
+                            }
+
+                        }
+                        else if(boardSize == BoardSize.THIRTEEN_X_THIRTEEN)
+                        {
+                            System.out.println("THIRTEEN_X_THIRTEEN");
+                            assert false : "To be implemented"; //TODO: implement
+                        }
+                        else if(boardSize == BoardSize.NINETEEN_X_NINETEEN)
+                        {
+                            System.out.println("NINETEEN_X_NINETEEN");
+                            assert false : "To be implemented"; //TODO: implement
+                        }
+                        else
+                        {
+                            assert false : "Unknown board size";
+                        }
+                    }
+                    else
+                    {
+                        assert false : "Unknown game mode";
+                    }
+
+                    // toClient.close();
+                    // fromClient.close();
+
+
+
+
+
                     //TODO: lookup for a player with the same game mode and pair them, if no player with the same game mode is found, add this player to the queue
                     //TODO: If paired with another player, start a new thread for this game session
 
 
                 }
                 catch (ClassNotFoundException e) { e.printStackTrace(); }
-
-
-
-
-
-                newPlayerIn.close();
             }
 
 

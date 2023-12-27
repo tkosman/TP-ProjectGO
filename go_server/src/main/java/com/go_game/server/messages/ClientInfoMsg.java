@@ -1,14 +1,18 @@
 package com.go_game.server.messages;
 
+import javax.swing.text.html.StyleSheet.BoxPainter;
+
 import com.go_game.server.enums.GameMode;
 import com.go_game.server.enums.MessageType;
 
+import main.java.com.go_game.server.enums.BoardSize;
+
 public class ClientInfoMsg extends AbstractMessage
 {
-    private int boardSize;
+    private BoardSize boardSize;
     private GameMode gameMode;
 
-    public ClientInfoMsg(int boardSize, GameMode gameMode)
+    public ClientInfoMsg(BoardSize boardSize, GameMode gameMode)
     {
         type = MessageType.CLIENT_INFO;
         this.boardSize = boardSize;
@@ -26,7 +30,7 @@ public class ClientInfoMsg extends AbstractMessage
         return gameMode;
     }
 
-    public int getBoardSize()
+    public BoardSize getBoardSize()
     {
         return boardSize;
     }
@@ -34,7 +38,7 @@ public class ClientInfoMsg extends AbstractMessage
     @Override
     public String toString()
     {
-        return "ClientInfo{\n" +
+        return "ClientInfoMessage {\n" +
                 "\ttype = " + type +
                 "\n\tboardSize = " + boardSize +
                 "\n\tgameMode = " + gameMode +

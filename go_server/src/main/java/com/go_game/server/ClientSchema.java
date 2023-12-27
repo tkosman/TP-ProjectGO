@@ -7,6 +7,10 @@ import java.net.Socket;
 
 import com.go_game.server.messages.ClientInfoMsg;
 import com.go_game.server.messages.IndexSetMsg;
+import com.go_game.server.messages.OkMsg;
+
+import main.java.com.go_game.server.enums.BoardSize;
+
 import com.go_game.server.enums.GameMode;
 
 //! Please write your javaFX client based on this class
@@ -35,15 +39,21 @@ public class ClientSchema
     {
         try
         {
+            //! 1 OUT
             socket = new Socket(HOST, PORT);
             fromServer = new ObjectInputStream(socket.getInputStream());
             toServer = new ObjectOutputStream(socket.getOutputStream());
 
+            //! 2 IN
             //? Get player index from server
             IndexSetMsg playerIndex = (IndexSetMsg)fromServer.readObject();
             System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
-            toServer.writeObject(new ClientInfoMsg(19, GameMode.REPLAY));
+            //! 3 OUT
+            toServer.writeObject(new ClientInfoMsg(BoardSize.NINE_X_NINE, GameMode.MULTI_PLAYER));
+
+            //! for debuging puproses
+            System.out.println((OkMsg)fromServer.readObject());
 
             // Thread fred = new Thread(this);
             // fred.start();
