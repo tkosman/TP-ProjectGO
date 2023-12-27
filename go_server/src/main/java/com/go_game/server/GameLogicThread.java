@@ -3,11 +3,10 @@ package com.go_game.server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 
+import com.go_game.server.enums.BoardSize;
 import com.go_game.server.messages.OkMsg;
 
-import main.java.com.go_game.server.enums.BoardSize;
 
 
 //? This class will be responsible for game logic and will be an individual thread for each game session
@@ -19,7 +18,7 @@ public class GameLogicThread implements Runnable
     private ObjectInputStream fromPlayer2;
     private BoardSize boardSize;
 
-
+    //TODO: pass socket to close it later
     public GameLogicThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
                             ObjectInputStream fromPlayer2, BoardSize boardSize) throws IOException
     {
@@ -29,11 +28,13 @@ public class GameLogicThread implements Runnable
         this.fromPlayer2 = fromPlayer2;
         this.boardSize = boardSize;
 
-        //! for debugging
+        //! 4 for debugging
         toPlayer1.writeObject(new OkMsg());
         toPlayer2.writeObject(new OkMsg());
 
-        // run();
+        run();
+
+        //TODO: close sockets
     }
 
     //TODO: yet to be implemented

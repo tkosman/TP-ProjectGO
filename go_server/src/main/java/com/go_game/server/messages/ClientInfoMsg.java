@@ -1,11 +1,8 @@
 package com.go_game.server.messages;
 
-import javax.swing.text.html.StyleSheet.BoxPainter;
-
+import com.go_game.server.enums.BoardSize;
 import com.go_game.server.enums.GameMode;
 import com.go_game.server.enums.MessageType;
-
-import main.java.com.go_game.server.enums.BoardSize;
 
 public class ClientInfoMsg extends AbstractMessage
 {
