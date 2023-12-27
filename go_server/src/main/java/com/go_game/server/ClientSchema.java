@@ -1,53 +1,59 @@
 package com.go_game.server;
 
-import java.io.DataInputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+
+import com.go_game.server.messages.ClientInfoMsg;
+import com.go_game.server.messages.IndexSetMsg;
+import com.go_game.server.enums.GameMode;
 
 //! Please write your javaFX client based on this class
 //! Keep in mind that this class is just a schema and will be deleted in the future
 
-public class ClientSchema implements Runnable
+public class ClientSchema
 {
-    private static enum typeOfPlayers {PLAYER1, PLAYER2};
+    private final static String HOST = "localhost";//? in future extended not only to localhost
+    private final static int PORT = 4444;
 
     private Socket socket;
-    private DataInputStream fromServer;
-    private typeOfPlayers whoIsPlayer;
+    private ObjectInputStream fromServer;
+    private ObjectOutputStream toServer;
 
-    //TODO: use this variable to determine whose turn is it
-    private typeOfPlayers whoseIsTurn;
-
-    public static void main(String[] args)
+    public static void main(String[] args) throws ClassNotFoundException
     {
         new ClientSchema();
     }
 
-    private ClientSchema()
+    private ClientSchema() throws ClassNotFoundException
     {
         establishServerConnection();
     }
 
-    private void establishServerConnection()
+    private void establishServerConnection() throws ClassNotFoundException
     {
         try
         {
-            socket = new Socket("localhost", 4444); //? in future extended not only to localhost
-            fromServer = new DataInputStream(socket.getInputStream());
-            // DataOutputStream toServer = new DataOutputStream(socket.getOutputStream());
+            socket = new Socket(HOST, PORT);
+            fromServer = new ObjectInputStream(socket.getInputStream());
+            toServer = new ObjectOutputStream(socket.getOutputStream());
 
-            int player = fromServer.readInt();
-            whoIsPlayer = (player == 1) ? typeOfPlayers.PLAYER1 : typeOfPlayers.PLAYER2;
-            System.out.println("You are player " + whoIsPlayer + "\n");
+            //? Get player index from server
+            IndexSetMsg playerIndex = (IndexSetMsg)fromServer.readObject();
+            System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
-            Thread fred = new Thread(this);
-            fred.start();
+            toServer.writeObject(new ClientInfoMsg(19, GameMode.REPLAY));
+
+            // Thread fred = new Thread(this);
+            // fred.start();
         }
         catch (IOException ex) {
             System.err.println(ex);
         }
     }
 
+    /*
     @Override
     public void run()
     {
@@ -94,4 +100,5 @@ public class ClientSchema implements Runnable
     {
         //? This method will be responsible for waiting for opponent move
     }
+    */
 }
