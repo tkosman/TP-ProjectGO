@@ -1,0 +1,72 @@
+/* Colors */
+#mainAnchorPane, #menuHBox, #leftPanelVBox, #middlePanelVBox, #rightPanelVBox {
+    -fx-background-color: #2b2b2b;
+    -fx-padding: 5;
+}
+
+/* Labels */
+Label {
+    -fx-text-fill: #ffffff;
+}
+
+/* ListViews */
+ListView {
+    -fx-control-inner-background: #3a3a3a;
+    -fx-text-fill: #ffffff;
+}
+
+/* Buttons */
+Button, #middlePanelVBox Button {
+    -fx-background-color: #af00ff;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 0; 
+    -fx-border-color: #af00ff; 
+    -fx-border-width: 2; 
+}
+
+Button:hover, #middlePanelVBox Button:hover {
+    -fx-background-color: #7500ac;
+}
+
+/* LineChart */
+LineChart {
+    -fx-background-color: #2b2b2b;
+}
+
+/* Axes */
+Axis {
+    -fx-tick-label-fill: #ffffff;
+    -fx-tick-mark-stroke: #ffffff;
+}
+
+/* Specific LineChart */
+#eloLineChart {
+    -fx-background-color: #2b2b2b;
+}
+
+#eloLineChart .chart-plot-background {
+    -fx-background-color: #2b2b2b;
+}
+
+/* Alerts */
+.alert {
+    -fx-background-color: #2E2E2E;
+    -fx-text-fill: white;
+}
+
+.anchor-pane {
+    -fx-background-color: #2E2E2E;
+}
+
+.fade-background {
+    -fx-background-color: #212121;
+}
+
+.game-circle {
+    -fx-fill: #3E3E3E;
+}
+
+#mainHBox {
+    -fx-background-color: #2b2b2b;
+    -fx-padding: 5;
+}
