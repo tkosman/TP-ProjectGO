@@ -1,21 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 
-<AnchorPane fx:id="mainAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.GameController">
+<HBox fx:id="mainHBox" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.GameController">
    <children>
-      <HBox fx:id="mainHBox" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+      <AnchorPane fx:id="boardAnchorPane" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
          <children>
-            <AnchorPane fx:id="boardAnchorPane" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
-               <children>
-                  <HBox fx:id="boardHBox" alignment="CENTER" fillHeight="false" prefHeight="100.0" prefWidth="200.0" />
-               </children>
-            </AnchorPane>
-            <VBox fx:id="controllsVBox" prefHeight="200.0" prefWidth="100.0" />
+            <HBox fx:id="boardHBox" alignment="CENTER" fillHeight="false" prefHeight="100.0" prefWidth="200.0" />
          </children>
-      </HBox>
+      </AnchorPane>
+      <VBox fx:id="controllsVBox" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="150.0">
+         <children>
+            <HBox alignment="TOP_RIGHT" prefWidth="200.0">
+               <children>
+                  <Button fx:id="exitButton" mnemonicParsing="false" onAction="#exit" text="exit" textAlignment="CENTER" />
+               </children>
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+               <VBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </VBox.margin>
+            </HBox>
+            <VBox alignment="TOP_RIGHT" prefWidth="100.0">
+               <children>
+                  <Label fx:id="oponentNameLabel" text="&lt;oponent&gt;">
+                     <graphic>
+                        <Label fx:id="oponentEloLabel" text="&lt;elo&gt;" />
+                     </graphic>
+                  </Label>
+                  <Label fx:id="oponentScoreLabel" text="&lt;score&gt;">
+                     <graphic>
+                        <Label text="Score:" />
+                     </graphic>
+                  </Label>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <ListView fx:id="moveBoardListView" prefHeight="200.0" prefWidth="200.0">
+               <VBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </VBox.margin>
+            </ListView>
+            <VBox alignment="TOP_RIGHT" prefWidth="100.0">
+               <children>
+                  <Label fx:id="playerNameLabel" text="&lt;you&gt;">
+                     <graphic>
+                        <Label fx:id="playerEloLabel" text="&lt;elo&gt;" />
+                     </graphic>
+                  </Label>
+                  <Label fx:id="playerScoreLabel" text="&lt;score&gt;">
+                     <graphic>
+                        <Label text="Score:" />
+                     </graphic>
+                  </Label>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <Button fx:id="passButton" mnemonicParsing="false" onAction="#pass" prefWidth="70.0" text="Pass">
+               <VBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="resignButton" mnemonicParsing="false" onAction="#resign" prefWidth="70.0" text="Resign">
+               <VBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
    </children>
-</AnchorPane>
+</HBox>

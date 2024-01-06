@@ -129,6 +129,8 @@ public class MenuController {
         alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
         alert.getDialogPane().setPrefSize(300, 300);
 
+        alert.setResult(ButtonType.OK);
+
         VBox gameModeSelectVBox = new VBox(5);
         gameModeSelectVBox.setAlignment(Pos.CENTER);
 
@@ -154,6 +156,10 @@ public class MenuController {
         pvpButton.setMaxWidth(Double.MAX_VALUE);
         botButton.setMaxWidth(Double.MAX_VALUE);
 
+        alert.setOnCloseRequest(event -> {
+            alert.setResult(ButtonType.CANCEL);
+        });
+
         pvpButton.setOnAction(event -> {
             gameModeSelectVBox.getChildren().clear();
             Platform.runLater(() -> {
@@ -164,13 +170,16 @@ public class MenuController {
             PauseTransition pauseTransition = new PauseTransition(Duration.seconds(4));
             pauseTransition.setOnFinished(e -> {
                 alert.setResult(ButtonType.OK);
-                alert.close();
 
-                try {
-                    App.setRoot("game");
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+                if (!alert.getResult().equals(ButtonType.CANCEL)) {
+                    try {
+                        App.setRoot("game");
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
+                
+                alert.close();
             });
 
             pauseTransition.play();
@@ -178,13 +187,16 @@ public class MenuController {
 
         botButton.setOnAction(event -> {
             alert.setResult(ButtonType.OK);
-            alert.close();
 
-            try {
-                App.setRoot("game");
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (!alert.getResult().equals(ButtonType.CANCEL)) {
+                try {
+                    App.setRoot("game");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+            
+            alert.close();
         });
 
         gameModeSelectVBox.getChildren().addAll(titleLable, pvpButton, botButton);
@@ -197,7 +209,6 @@ public class MenuController {
     }
 
     private Node matchmakingAlert() {
-        // Create an Arc (circle segment) to represent the spinning circle
         Arc coloredArc = new Arc();
         coloredArc.setCenterX(50);
         coloredArc.setCenterY(50);
@@ -224,7 +235,6 @@ public class MenuController {
         circle.getChildren().addAll(coloredArc, notchArc);
 
 
-        // Create a RotateTransition to make the coloredArc spin
         RotateTransition rotateTransition = new RotateTransition(Duration.seconds(2),  circle);
         rotateTransition.setByAngle(360);
         rotateTransition.setCycleCount(RotateTransition.INDEFINITE);
