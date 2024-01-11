@@ -5,14 +5,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import shared.enums.BoardSize;
 import shared.enums.GameMode;
 import shared.messages.ClientInfoMsg;
 import shared.messages.IndexSetMsg;
 import shared.messages.OkMsg;
-import shared.enums.BoardSize;
 
-//! Please write your javaFX client based on this class
-//! Keep in mind that this class is just a schema and will be deleted in the future
 
 public class Client
 {

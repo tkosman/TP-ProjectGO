@@ -12,8 +12,6 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 
-import com.go_game.client.connection.Client;
-
 /**
  * JavaFX App
  */
