@@ -1,4 +1,4 @@
-package com.go_game.server;
+package com.go_game.client.connection;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -14,7 +14,7 @@ import shared.enums.BoardSize;
 //! Please write your javaFX client based on this class
 //! Keep in mind that this class is just a schema and will be deleted in the future
 
-public class ClientSchema
+public class Client
 {
     private final static String HOST = "localhost";//? in future extended not only to localhost
     private final static int PORT = 4444;
@@ -25,10 +25,10 @@ public class ClientSchema
 
     public static void main(String[] args) throws ClassNotFoundException
     {
-        new ClientSchema();
+        new Client();
     }
 
-    public ClientSchema() throws ClassNotFoundException
+    public Client() throws ClassNotFoundException
     {
         establishServerConnection();
     }

@@ -1,6 +1,6 @@
-package com.go_game.server.messages;
+package shared.messages;
 
-import com.go_game.server.enums.MessageType;
+import shared.enums.MessageType;
 
 public class OkMsg extends AbstractMessage
 {

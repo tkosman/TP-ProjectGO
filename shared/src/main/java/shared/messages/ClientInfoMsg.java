@@ -1,8 +1,8 @@
-package com.go_game.server.messages;
+package shared.messages;
 
-import com.go_game.server.enums.BoardSize;
-import com.go_game.server.enums.GameMode;
-import com.go_game.server.enums.MessageType;
+import shared.enums.BoardSize;
+import shared.enums.GameMode;
+import shared.enums.MessageType;
 
 public class ClientInfoMsg extends AbstractMessage
 {

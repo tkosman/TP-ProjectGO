@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import com.go_game.server.enums.BoardSize;
-import com.go_game.server.messages.OkMsg;
+import shared.enums.BoardSize;
+import shared.messages.OkMsg;
 
 
 

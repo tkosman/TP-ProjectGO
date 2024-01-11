@@ -1,13 +1,16 @@
 package com.go_game.server;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Date;
 
-import com.go_game.server.enums.GameMode;
-import com.go_game.server.messages.ClientInfoMsg;
-import com.go_game.server.messages.IndexSetMsg;
-import com.go_game.server.enums.BoardSize;
+import shared.enums.GameMode;
+import shared.messages.ClientInfoMsg;
+import shared.messages.IndexSetMsg;
+import shared.enums.BoardSize;
 
 public class Server
 {
