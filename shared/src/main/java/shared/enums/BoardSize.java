@@ -1,4 +1,4 @@
-package com.go_game.server.enums;
+package shared.enums;
 
 public enum BoardSize 
 {

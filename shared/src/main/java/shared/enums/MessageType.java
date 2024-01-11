@@ -1,4 +1,5 @@
-package com.go_game.server.enums;
+package shared.enums;
+
 
 //TODO:change this enum for actual states used in the game
 public enum MessageType

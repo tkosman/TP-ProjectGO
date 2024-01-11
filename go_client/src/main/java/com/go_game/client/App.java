@@ -37,6 +37,13 @@ public class App extends Application {
         stage.setTitle("go");
 
         stage.show();
+
+        // try {
+        //     Client client = new Client();
+        // } catch (ClassNotFoundException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
     }
 
     public static void setRoot(String fxml) throws IOException {

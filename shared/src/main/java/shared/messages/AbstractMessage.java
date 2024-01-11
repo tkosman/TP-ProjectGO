@@ -1,7 +1,8 @@
-package com.go_game.server.messages;
+package shared.messages;
 
-import com.go_game.server.enums.MessageType;
 import java.io.Serializable;
+
+import shared.enums.MessageType;
 
 public abstract class AbstractMessage implements Serializable
 {
