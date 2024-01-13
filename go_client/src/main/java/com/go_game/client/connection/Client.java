@@ -15,7 +15,7 @@ import shared.messages.OkMsg;
 import shared.messages.StringMsg;
 
 
-public class Client
+public class Client implements Runnable
 {
     private final static String HOST = "localhost";//? in future extended not only to localhost
     private final static int PORT = 4444;
@@ -25,6 +25,8 @@ public class Client
     private ObjectOutputStream toServer;
     private int gameID;
     private Stone playerColor;
+    private boolean isPlayer1Turn;
+
 
     public static void main(String[] args) throws ClassNotFoundException
     {
@@ -53,28 +55,27 @@ public class Client
             //! 3 OUT
             toServer.writeObject(new ClientInfoMsg(BoardSize.NINE_X_NINE, GameMode.MULTI_PLAYER));
 
-            //! from now on handshake finishes and game starts
-
             //! 4 IN
             GameJoinedMsg gameJoinedMsg = (GameJoinedMsg)fromServer.readObject();
             gameID = gameJoinedMsg.getGameID();
             playerColor = gameJoinedMsg.getStoneColor();
+            isPlayer1Turn = gameJoinedMsg.isPlayer1Turn();
 
-            // Thread fred = new Thread(this);
-            // fred.start();
+            //! HANDSHAKE FINISHED
+            Thread fred = new Thread(this);
+            fred.start();
         }
         catch (IOException ex) {
             System.err.println(ex);
         }
     }
-    /*
     @Override
     public void run()
     {
         //TODO: add some condition to stop this loop
         while (true)
         {
-
+            
             //? this is a basic game flow that definitely will be changed
             if (whoIsPlayer == whoseIsTurn)
             {
@@ -90,7 +91,8 @@ public class Client
             }
         }
     }
-
+    
+    /*
     //TODO: implement this method
     private void receiveOpponentMove()
     {

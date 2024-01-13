@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import shared.enums.BoardSize;
 import shared.enums.Stone;
 import shared.messages.BoardStateMsg;
+import shared.messages.GameJoinedMsg;
 import shared.messages.MoveMsg;
 import shared.messages.OkMsg;
 import shared.messages.StringMsg;
@@ -51,14 +52,14 @@ public class GameLogicThread implements Runnable
         }
 
         gameID++;
-        StringMsg gameNumberMsg = new StringMsg("Joined game #" + gameID);
-        
         //! 4 OUT
-        toPlayer1.writeObject(gameNumberMsg);
-        toPlayer2.writeObject(gameNumberMsg);
+        toPlayer1.writeObject(new GameJoinedMsg(gameID, Stone.BLACK, isPlayer1Turn));
+        toPlayer2.writeObject(new GameJoinedMsg(gameID, Stone.WHITE, isPlayer1Turn));
 
 
         initializeBoard();
+
+        //! HANDSHAKE FINISHED
         // run();
 
         //TODO: close sockets
