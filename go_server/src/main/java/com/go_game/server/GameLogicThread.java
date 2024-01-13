@@ -3,6 +3,7 @@ package com.go_game.server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import shared.enums.BoardSize;
@@ -60,32 +61,32 @@ public class GameLogicThread implements Runnable
         initializeBoard();
 
         //! HANDSHAKE FINISHED
-        // run();
+        run();
 
         //TODO: close sockets
     }
 
     //! testing
-    public static void main(String[] args)
-    {
-        try
-        {
-            GameLogicThread glt = new GameLogicThread(null, null, null, null, BoardSize.NINE_X_NINE);
-            glt.initializeBoard();
-            glt.printBoard();
-            glt.processMove(1, 1);
-            glt.switchTurns();
-            glt.processMove(0, 1);
-            glt.processMove(1, 0);
-            glt.processMove(2, 1);
+    // public static void main(String[] args)
+    // {
+    //     try
+    //     {
+    //         GameLogicThread glt = new GameLogicThread(null, null, null, null, BoardSize.NINE_X_NINE);
+    //         glt.initializeBoard();
+    //         glt.printBoard();
+    //         glt.processMove(1, 1);
+    //         glt.switchTurns();
+    //         glt.processMove(0, 1);
+    //         glt.processMove(1, 0);
+    //         glt.processMove(2, 1);
 
-            glt.printBoard();
-            glt.processMove(1, 2);
-            glt.checkForCapturedStones(1, 2);
-            glt.printBoard();
-        }
-        catch (IOException e) { e.printStackTrace(); }
-    }
+    //         glt.printBoard();
+    //         glt.processMove(1, 2);
+    //         glt.checkForCapturedStones(1, 2);
+    //         glt.printBoard();
+    //     }
+    //     catch (IOException e) { e.printStackTrace(); }
+    // }
     //! END testing
 
     @Override
@@ -95,24 +96,30 @@ public class GameLogicThread implements Runnable
         {
             while(!isGameOver())
             {
+                System.out.println(new Timestamp(System.currentTimeMillis()) + " Waiting for player move " + " TURN: " + isPlayer1Turn);
                 MoveMsg moveMsg = waitForPlayerMove();
                 int x = moveMsg.getX();
                 int y = moveMsg.getY();
 
                 //TODO: check if player passed
 
-                if (isMoveValid(x, y))
-                {
+
+                //TODO: uncomment this
+                // if (isMoveValid(x, y))
+                // {
                     processMove(x, y);
                     checkForCapturedStones(x, y);
-                    switchTurns();
                     sendBoardState();
 
+                    Thread.sleep(1000); //! for debugging purposes
+                    printBoard(); //! for debugging purposes
+                    switchTurns();
                 }
-            }
+                //TODO: Send that move not valid
+            // }
         }
         //TODO: handle this exception correctly
-        catch (IOException | ClassNotFoundException e)
+        catch (InterruptedException | IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
         }
@@ -192,7 +199,11 @@ public class GameLogicThread implements Runnable
     private void sendBoardState() throws IOException
     {
         BoardStateMsg boardStateMsg = new BoardStateMsg(board);
+
+        //! 2 OUT -> Sending board state to players
+        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1" + boardStateMsg); //! for debugging purposes
         toPlayer1.writeObject(boardStateMsg);
+        System.out.println(new Timestamp(System.currentTimeMillis()) + "SENDING BOARD STATE TO PLAYER 2" + boardStateMsg); //! for debugging purposes
         toPlayer2.writeObject(boardStateMsg);
     }
 
@@ -207,12 +218,21 @@ public class GameLogicThread implements Runnable
     private MoveMsg waitForPlayerMove() throws IOException, ClassNotFoundException
     {
         try
-        {
+        {   
             if (isPlayer1Turn)
+            {   
+                //! 1 IN -> Waiting for move from player 1
+                MoveMsg moveMsg = (MoveMsg) fromPlayer2.readObject();
+                OkMsg okMsg = (OkMsg) fromPlayer1.readObject();
+                return moveMsg;
+
+            }
+            else 
             {
-                return (MoveMsg) fromPlayer1.readObject();
-            } else {
-                return (MoveMsg) fromPlayer2.readObject();
+                //! 1 IN -> Waiting for move from player 2
+                MoveMsg moveMsg = (MoveMsg) fromPlayer1.readObject();
+                OkMsg okMsg = (OkMsg) fromPlayer2.readObject();
+                return moveMsg;
             }
 
         //TODO: handle this exception correctly
@@ -274,6 +294,7 @@ public class GameLogicThread implements Runnable
         System.out.println();
         System.out.println();
     }
+    //! END for debugging purposes
 
 
     private void initializeBoard() 

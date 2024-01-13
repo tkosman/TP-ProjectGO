@@ -4,15 +4,18 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.Date;
+import java.sql.Timestamp;
 
 import shared.enums.BoardSize;
 import shared.enums.GameMode;
 import shared.enums.Stone;
+import shared.messages.BoardStateMsg;
 import shared.messages.ClientInfoMsg;
 import shared.messages.GameJoinedMsg;
 import shared.messages.IndexSetMsg;
+import shared.messages.MoveMsg;
 import shared.messages.OkMsg;
-import shared.messages.StringMsg;
 
 
 public class Client implements Runnable
@@ -23,9 +26,13 @@ public class Client implements Runnable
     private Socket socket;
     private ObjectInputStream fromServer;
     private ObjectOutputStream toServer;
-    private int gameID;
-    private Stone playerColor;
+    private int playerNo;
     private boolean isPlayer1Turn;
+    
+    private Stone playerColor;
+    private int gameID;
+
+    private Stone[][] board; //! for debugging purposes
 
 
     public static void main(String[] args) throws ClassNotFoundException
@@ -50,6 +57,7 @@ public class Client implements Runnable
             //! 2 IN
             //? Get player index from server
             IndexSetMsg playerIndex = (IndexSetMsg)fromServer.readObject();
+            playerNo = playerIndex.getIndex();
             System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
             //! 3 OUT
@@ -72,49 +80,105 @@ public class Client implements Runnable
     @Override
     public void run()
     {
-        //TODO: add some condition to stop this loop
-        while (true)
+        try
         {
-            
-            //? this is a basic game flow that definitely will be changed
-            if (whoIsPlayer == whoseIsTurn)
+            while (!isGameOver())
             {
-                receiveInfoFromServer();
-                someKindOfWaiting();
-                sendMoveToServer();
-            }
-            else
-            {
-                receiveInfoFromServer();
-                someKindOfWaiting();
-                receiveOpponentMove();
+                if (isMyTurn())
+                {
+                    //? This player turn
+                    //! 1 OUT -> It's my turn and I'm sending move to server
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    sendMoveToServer();
+
+                    //! 2 IN -> It's my turn and I'm waiting for server to send me info back
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    receiveInfoFromServer();
+                }
+                else
+                {
+                    // //! 1 OUT -> It's NOT my turn so I'm just sending OK to server
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    sendOkToServer();
+
+                    //! 2 IN -> It's NOT my turn so I'm waiting for server to send me info back
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    receiveInfoFromServer();
+                }
+
+                switchTurns();
             }
         }
-    }
-    
-    /*
-    //TODO: implement this method
-    private void receiveOpponentMove()
-    {
-        //? This method will be responsible for receiving opponent move
+        catch (IOException | ClassNotFoundException e) { e.printStackTrace(); }
+    }   
+
+     //TODO: yet to be implemented
+     private boolean isGameOver()
+     {
+         return false; // Placeholder
+     }
+
+     private boolean isMyTurn()
+     {
+        return isPlayer1Turn && playerNo == 1 || !isPlayer1Turn && playerNo == 2;
     }
 
-    //TODO: implement this method
-    private void receiveInfoFromServer()
+    private void switchTurns()
     {
-        //? This method will be responsible for receiving info from server
+        isPlayer1Turn = !isPlayer1Turn;
     }
 
-    //TODO: implement this method
-    private void sendMoveToServer()
+    private void sendOkToServer() throws IOException
     {
-        //? This method will be responsible for sending move to server
+        toServer.writeObject(new OkMsg());
     }
 
-    //ToDO: implement this method
-    private void someKindOfWaiting()
-    {
-        //? This method will be responsible for waiting for opponent move
+     private void sendMoveToServer() throws IOException
+     {
+         MoveMsg moveMsg = getPlayerMove();
+         System.out.println(moveMsg); //! for debugging purposes
+        toServer.writeObject(moveMsg);
     }
-    */
+
+    private MoveMsg getPlayerMove() {
+        //TODO: !DOBREK! here you should get the move from the player return it as a MoveMsg
+
+        //Placeholder
+        int x = (int) (Math.random() * 9);
+        int y = (int) (Math.random() * 9);
+        return new MoveMsg(x, y);
+    }
+
+    private void receiveInfoFromServer() throws IOException, ClassNotFoundException 
+    {
+        //TODO: !DOBREK! here you should receive the info from the server and handle it
+        BoardStateMsg message = (BoardStateMsg) fromServer.readObject();
+        board = message.getBoardState();
+        printBoard();
+    }
+
+     //! for debugging purposes
+     private void printBoard()
+     {
+        int boardSize = 9;
+        for (int y = 0; y < boardSize; y++) {
+            for (int x = 0; x < boardSize; x++) {
+                switch (board[x][y]) {
+                    case BLACK:
+                        System.out.print("B ");
+                        break;
+                    case WHITE:
+                        System.out.print("W ");
+                        break;
+                    default:
+                        System.out.print(". ");
+                        break;
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+        System.out.println();
+    }
+    //! END for debugging purposes
 }
