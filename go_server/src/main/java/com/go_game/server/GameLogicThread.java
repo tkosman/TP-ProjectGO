@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import shared.enums.BoardSize;
 import shared.enums.Stone;
+import shared.messages.BoardStateMsg;
 import shared.messages.MoveMsg;
 import shared.messages.OkMsg;
 
@@ -48,18 +49,39 @@ public class GameLogicThread implements Runnable
         }
 
         initializeBoard();
+        run();
         
 
         //! 4 for debugging
-        toPlayer1.writeObject(new OkMsg());
-        toPlayer2.writeObject(new OkMsg());
+        // toPlayer1.writeObject(new OkMsg());
+        // toPlayer2.writeObject(new OkMsg());
 
-        run();
 
         //TODO: close sockets
     }
 
-    //TODO: yet to be implemented
+    //! testing
+    public static void main(String[] args)
+    {
+        try
+        {
+            GameLogicThread glt = new GameLogicThread(null, null, null, null, BoardSize.NINE_X_NINE);
+            glt.initializeBoard();
+            glt.printBoard();
+            glt.processMove(1, 1);
+            glt.switchTurns();
+            glt.processMove(0, 1);
+            glt.processMove(1, 0);
+            glt.processMove(2, 1);
+
+            glt.printBoard();
+            glt.processMove(1, 2);
+            glt.checkForCapturedStones(1, 2);
+            glt.printBoard();
+        }
+        catch (IOException e) { e.printStackTrace(); }
+    }
+
     @Override
     public void run()
     {
@@ -76,15 +98,9 @@ public class GameLogicThread implements Runnable
                 if (isMoveValid(x, y))
                 {
                     processMove(x, y);
-
-                    //TODO: implement checkForCapturedStones
-                    checkForCapturedStones();
-
-                    //TODO: implement checkForDeadStones
-                    // switchPlayerTurn();
-
-                    //TODO: implement sendBoardState
-                    // sendBoardState();
+                    checkForCapturedStones(x, y);
+                    switchTurns();
+                    sendBoardState();
 
                 }
             }
@@ -162,11 +178,23 @@ public class GameLogicThread implements Runnable
         }
     }
 
+    private void switchTurns()
+    {
+        isPlayer1Turn = !isPlayer1Turn;
+    }
+
+    private void sendBoardState() throws IOException
+    {
+        BoardStateMsg boardStateMsg = new BoardStateMsg(board);
+        toPlayer1.writeObject(boardStateMsg);
+        toPlayer2.writeObject(boardStateMsg);
+    }
+
 
     //TODO: yet to be implemented
     private boolean isGameOver()
     {
-        // Implement logic to determine if the game is over
+        //TODO: Implement logic to determine if the game is over
         return false; // Placeholder
     }
 
@@ -217,6 +245,28 @@ public class GameLogicThread implements Runnable
     private boolean isSuicideMove(int x, int y) {
         // Implement the logic to check if the move is a suicide move
         return false; // Placeholder
+    }
+
+    //! for debugging purposes
+    private void printBoard() {
+        for (int y = 0; y < boardSize; y++) {
+            for (int x = 0; x < boardSize; x++) {
+                switch (board[x][y]) {
+                    case BLACK:
+                        System.out.print("B ");
+                        break;
+                    case WHITE:
+                        System.out.print("W ");
+                        break;
+                    default:
+                        System.out.print(". ");
+                        break;
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+        System.out.println();
     }
 
 
