@@ -7,9 +7,12 @@ import java.net.Socket;
 
 import shared.enums.BoardSize;
 import shared.enums.GameMode;
+import shared.enums.Stone;
 import shared.messages.ClientInfoMsg;
+import shared.messages.GameJoinedMsg;
 import shared.messages.IndexSetMsg;
 import shared.messages.OkMsg;
+import shared.messages.StringMsg;
 
 
 public class Client
@@ -20,6 +23,8 @@ public class Client
     private Socket socket;
     private ObjectInputStream fromServer;
     private ObjectOutputStream toServer;
+    private int gameID;
+    private Stone playerColor;
 
     public static void main(String[] args) throws ClassNotFoundException
     {
@@ -50,8 +55,10 @@ public class Client
 
             //! from now on handshake finishes and game starts
 
-            //! 4 for debugging
-            System.out.println((OkMsg)fromServer.readObject());
+            //! 4 IN
+            GameJoinedMsg gameJoinedMsg = (GameJoinedMsg)fromServer.readObject();
+            gameID = gameJoinedMsg.getGameID();
+            playerColor = gameJoinedMsg.getStoneColor();
 
             // Thread fred = new Thread(this);
             // fred.start();

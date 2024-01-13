@@ -10,6 +10,7 @@ import shared.enums.Stone;
 import shared.messages.BoardStateMsg;
 import shared.messages.MoveMsg;
 import shared.messages.OkMsg;
+import shared.messages.StringMsg;
 
 
 
@@ -20,6 +21,7 @@ public class GameLogicThread implements Runnable
     private ObjectInputStream fromPlayer1;
     private ObjectOutputStream toPlayer2;
     private ObjectInputStream fromPlayer2;
+    private static int gameID = 0;
     private int boardSize;
     private Stone[][] board;
     private boolean isPlayer1Turn = true;
@@ -48,14 +50,16 @@ public class GameLogicThread implements Runnable
             boardSize = 19;
         }
 
-        initializeBoard();
-        run();
+        gameID++;
+        StringMsg gameNumberMsg = new StringMsg("Joined game #" + gameID);
         
+        //! 4 OUT
+        toPlayer1.writeObject(gameNumberMsg);
+        toPlayer2.writeObject(gameNumberMsg);
 
-        //! 4 for debugging
-        // toPlayer1.writeObject(new OkMsg());
-        // toPlayer2.writeObject(new OkMsg());
 
+        initializeBoard();
+        // run();
 
         //TODO: close sockets
     }
@@ -81,6 +85,7 @@ public class GameLogicThread implements Runnable
         }
         catch (IOException e) { e.printStackTrace(); }
     }
+    //! END testing
 
     @Override
     public void run()
