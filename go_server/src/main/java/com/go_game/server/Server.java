@@ -18,6 +18,7 @@ public class Server
     private static final int PORT = 4444;
     private static int player_index = 1;
     
+    //TODO
     /*
     * add Client connection class sth like:
     public class ClientConnection {
