@@ -135,7 +135,6 @@ public class Client implements Runnable
         }
         else if (message.getType() == MessageType.MOVE_NOT_VALID)
         {
-            System.out.println("CHUJ");
             //? Player did an invalid move
             //? we need to resent the move
             if (playerNo == ((MoveNotValidMsg)message).playerWhoDidNotValidMove())
@@ -155,10 +154,6 @@ public class Client implements Runnable
         }
     }
 
-
-
-
-
      //TODO: yet to be implemented
      private boolean isGameOver()
      {
@@ -167,7 +162,7 @@ public class Client implements Runnable
 
      private boolean isMyTurn()
      {
-        return isPlayer1Turn && playerNo == 1 || !isPlayer1Turn && playerNo == 2;
+        return isPlayer1Turn && playerNo % 2 == 1  || !isPlayer1Turn && playerNo % 2 == 0;
     }
 
     private void switchTurns()
@@ -183,7 +178,6 @@ public class Client implements Runnable
      private void sendMoveToServer() throws IOException
      {
         MoveMsg moveMsg = getPlayerMove();
-        System.out.println(moveMsg); //! for debugging purposes
         toServer.writeObject(moveMsg);
         toServer.reset();
     }
