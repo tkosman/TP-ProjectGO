@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.sql.Date;
 import java.sql.Timestamp;
 
 import shared.enums.BoardSize;
@@ -62,12 +61,15 @@ public class Client implements Runnable
 
             //! 3 OUT
             toServer.writeObject(new ClientInfoMsg(BoardSize.NINE_X_NINE, GameMode.MULTI_PLAYER));
+            toServer.reset();
 
             //! 4 IN
             GameJoinedMsg gameJoinedMsg = (GameJoinedMsg)fromServer.readObject();
             gameID = gameJoinedMsg.getGameID();
             playerColor = gameJoinedMsg.getStoneColor();
             isPlayer1Turn = gameJoinedMsg.isPlayer1Turn();
+
+            System.out.println("Game ID: " + gameID);
 
             //! HANDSHAKE FINISHED
             Thread fred = new Thread(this);
@@ -88,7 +90,7 @@ public class Client implements Runnable
                 {
                     //? This player turn
                     //! 1 OUT -> It's my turn and I'm sending move to server
-                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS PLAYER " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
                     sendMoveToServer();
 
                     //! 2 IN -> It's my turn and I'm waiting for server to send me info back
@@ -98,7 +100,7 @@ public class Client implements Runnable
                 else
                 {
                     // //! 1 OUT -> It's NOT my turn so I'm just sending OK to server
-                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS PLAYER " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
                     sendOkToServer();
 
                     //! 2 IN -> It's NOT my turn so I'm waiting for server to send me info back
@@ -138,6 +140,7 @@ public class Client implements Runnable
          MoveMsg moveMsg = getPlayerMove();
          System.out.println(moveMsg); //! for debugging purposes
         toServer.writeObject(moveMsg);
+        toServer.reset();
     }
 
     private MoveMsg getPlayerMove() {
@@ -152,14 +155,16 @@ public class Client implements Runnable
     private void receiveInfoFromServer() throws IOException, ClassNotFoundException 
     {
         //TODO: !DOBREK! here you should receive the info from the server and handle it
-        BoardStateMsg message = (BoardStateMsg) fromServer.readObject();
-        board = message.getBoardState();
+        BoardStateMsg boardStateMsg = (BoardStateMsg) fromServer.readObject();
+        board = boardStateMsg.getBoardState();
         printBoard();
     }
 
      //! for debugging purposes
      private void printBoard()
      {
+        System.out.print("\033[H\033[2J");  
+        System.out.flush();  
         int boardSize = 9;
         for (int y = 0; y < boardSize; y++) {
             for (int x = 0; x < boardSize; x++) {

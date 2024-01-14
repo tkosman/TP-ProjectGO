@@ -5,7 +5,7 @@ import shared.enums.Stone;
 
 public class BoardStateMsg extends AbstractMessage 
 {
-    private final Stone[][] boardState;
+    private Stone[][] boardState;
 
     public BoardStateMsg(Stone[][] boardState)
     {
@@ -16,5 +16,11 @@ public class BoardStateMsg extends AbstractMessage
     public Stone[][] getBoardState()
     {
         return boardState;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "BoardStateMsg [boardState=" + boardState + "]";
     }
 }

@@ -1,6 +1,6 @@
 package shared.enums;
 
-public enum Stone 
+public enum Stone
 {
     BLACK, 
     WHITE, 

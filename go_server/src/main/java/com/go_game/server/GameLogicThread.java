@@ -55,13 +55,16 @@ public class GameLogicThread implements Runnable
         gameID++;
         //! 4 OUT
         toPlayer1.writeObject(new GameJoinedMsg(gameID, Stone.BLACK, isPlayer1Turn));
+        toPlayer1.reset();
         toPlayer2.writeObject(new GameJoinedMsg(gameID, Stone.WHITE, isPlayer1Turn));
+        toPlayer2.reset();
 
 
         initializeBoard();
 
         //! HANDSHAKE FINISHED
-        run();
+        Thread fred = new Thread(this);
+        fred.start();
 
         //TODO: close sockets
     }
@@ -112,7 +115,6 @@ public class GameLogicThread implements Runnable
                     sendBoardState();
 
                     Thread.sleep(1000); //! for debugging purposes
-                    printBoard(); //! for debugging purposes
                     switchTurns();
                 }
                 //TODO: Send that move not valid
@@ -201,10 +203,12 @@ public class GameLogicThread implements Runnable
         BoardStateMsg boardStateMsg = new BoardStateMsg(board);
 
         //! 2 OUT -> Sending board state to players
-        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1" + boardStateMsg); //! for debugging purposes
+        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1\n"); //! for debugging purposes
         toPlayer1.writeObject(boardStateMsg);
-        System.out.println(new Timestamp(System.currentTimeMillis()) + "SENDING BOARD STATE TO PLAYER 2" + boardStateMsg); //! for debugging purposes
+        toPlayer1.reset();
+        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 2 "); //! for debugging purposes
         toPlayer2.writeObject(boardStateMsg);
+        toPlayer2.reset();
     }
 
 
