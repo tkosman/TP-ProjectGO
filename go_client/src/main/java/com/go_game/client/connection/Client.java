@@ -8,12 +8,15 @@ import java.sql.Timestamp;
 
 import shared.enums.BoardSize;
 import shared.enums.GameMode;
+import shared.enums.MessageType;
 import shared.enums.Stone;
+import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
 import shared.messages.ClientInfoMsg;
 import shared.messages.GameJoinedMsg;
 import shared.messages.IndexSetMsg;
 import shared.messages.MoveMsg;
+import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
 
 
@@ -26,7 +29,7 @@ public class Client implements Runnable
     private ObjectInputStream fromServer;
     private ObjectOutputStream toServer;
     private int playerNo;
-    private boolean isPlayer1Turn;
+    private boolean isPlayer1Turn = true;
     
     private Stone playerColor;
     private int gameID;
@@ -86,38 +89,80 @@ public class Client implements Runnable
         {
             while (!isGameOver())
             {
+                System.out.println("\n\nTURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                //! EACH WILL BE SENT TO SERVER
                 if (isMyTurn())
                 {
                     //? This player turn
-                    //! 1 OUT -> It's my turn and I'm sending move to server
+                    //! 1 OUT +++++++++ -> It's my turn and I'm sending move to server
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS PLAYER " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
                     sendMoveToServer();
 
-                    //! 2 IN -> It's my turn and I'm waiting for server to send me info back
-                    System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    //! 2 IN ########## -> It's my turn and I'm waiting for server to send me info back
                     receiveInfoFromServer();
                 }
                 else
                 {
-                    // //! 1 OUT -> It's NOT my turn so I'm just sending OK to server
+                    // //! 1 OUT +++++++++ -> It's NOT my turn so I'm just sending OK to server
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS PLAYER " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
                     sendOkToServer();
 
-                    //! 2 IN -> It's NOT my turn so I'm waiting for server to send me info back
-                    System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    //! 2 IN ########## -> It's NOT my turn so I'm waiting for server to send me info back
                     receiveInfoFromServer();
                 }
 
-                switchTurns();
             }
         }
         catch (IOException | ClassNotFoundException e) { e.printStackTrace(); }
     }   
 
+    private void receiveInfoFromServer() throws IOException, ClassNotFoundException 
+    {
+        //TODO: !DOBREK! here you should receive the info from the server and handle it
+
+        AbstractMessage message = (AbstractMessage) fromServer.readObject();
+        System.out.println("MESSAGE " + message);
+
+        if (message.getType() == MessageType.BOARD_STATE)
+        {
+            switchTurns();
+            //? Player did a valid move OR it was not his trun
+            //? server sent back the updated board
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+            BoardStateMsg boardStateMsg = (BoardStateMsg) message;
+            board = boardStateMsg.getBoardState();
+            printBoard();
+        }
+        else if (message.getType() == MessageType.MOVE_NOT_VALID)
+        {
+            System.out.println("CHUJ");
+            //? Player did an invalid move
+            //? we need to resent the move
+            if (playerNo == ((MoveNotValidMsg)message).playerWhoDidNotValidMove())
+            {
+                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID BY #" + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+            }
+            else
+            {
+                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID BY #" + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+            }
+
+        }
+        else
+        {
+            //? Something went wrong, simply won't happen
+            System.err.println("Sorry sth went wrong :(");
+        }
+    }
+
+
+
+
+
      //TODO: yet to be implemented
      private boolean isGameOver()
      {
-         return false; // Placeholder
+        return false; // Placeholder
      }
 
      private boolean isMyTurn()
@@ -137,8 +182,8 @@ public class Client implements Runnable
 
      private void sendMoveToServer() throws IOException
      {
-         MoveMsg moveMsg = getPlayerMove();
-         System.out.println(moveMsg); //! for debugging purposes
+        MoveMsg moveMsg = getPlayerMove();
+        System.out.println(moveMsg); //! for debugging purposes
         toServer.writeObject(moveMsg);
         toServer.reset();
     }
@@ -152,19 +197,11 @@ public class Client implements Runnable
         return new MoveMsg(x, y);
     }
 
-    private void receiveInfoFromServer() throws IOException, ClassNotFoundException 
-    {
-        //TODO: !DOBREK! here you should receive the info from the server and handle it
-        BoardStateMsg boardStateMsg = (BoardStateMsg) fromServer.readObject();
-        board = boardStateMsg.getBoardState();
-        printBoard();
-    }
-
      //! for debugging purposes
      private void printBoard()
      {
-        System.out.print("\033[H\033[2J");  
-        System.out.flush();  
+        // System.out.print("\033[H\033[2J");  
+        // System.out.flush();  
         int boardSize = 9;
         for (int y = 0; y < boardSize; y++) {
             for (int x = 0; x < boardSize; x++) {

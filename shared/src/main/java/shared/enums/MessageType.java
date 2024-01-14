@@ -11,4 +11,5 @@ public enum MessageType
     BOARD_STATE,    //? sent to update the board
     STRING_MESSAGE, //? used to send a string message
     GAME_JOINED,    //? sent to say that the game was joined
+    MOVE_NOT_VALID, //? sent to say that the move was not valid
 }

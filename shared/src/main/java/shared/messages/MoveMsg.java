@@ -28,7 +28,7 @@ public class MoveMsg extends AbstractMessage
         return y;
     }
 
-    public boolean isPass() {
+    public boolean playerPassed() {
         return pass;
     }
 

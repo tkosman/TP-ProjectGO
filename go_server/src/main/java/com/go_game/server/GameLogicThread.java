@@ -11,8 +11,8 @@ import shared.enums.Stone;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
 import shared.messages.MoveMsg;
+import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
-import shared.messages.StringMsg;
 
 
 
@@ -99,32 +99,118 @@ public class GameLogicThread implements Runnable
         {
             while(!isGameOver())
             {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " Waiting for player move " + " TURN: " + isPlayer1Turn);
-                MoveMsg moveMsg = waitForPlayerMove();
+                System.out.println("\n\nTURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+
+                MoveMsg moveMsg;
+                if (!isPlayer1Turn)
+                {
+                    //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " Player BLACK playing"); //! for debugging purposes
+                    moveMsg = (MoveMsg) fromPlayer1.readObject();
+                    OkMsg okMsg = (OkMsg) fromPlayer2.readObject();
+                }
+                else
+                {
+                    //! 1 IN +++++++++ -> Player 2 playing and player 1 sending OK
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " Player WHITE playing"); //! for debugging purposes
+                    moveMsg = (MoveMsg) fromPlayer2.readObject();
+                    OkMsg okMsg = (OkMsg) fromPlayer1.readObject();
+                }
+
+                if (moveMsg.playerPassed())
+                {
+                    //TODO: implement pass logic
+                    System.exit(0);
+                }
+
                 int x = moveMsg.getX();
                 int y = moveMsg.getY();
 
-                //TODO: check if player passed
-
-
-                //TODO: uncomment this
-                // if (isMoveValid(x, y))
-                // {
+                if (!isMoveValid(x, y))
+                {
+                    //? move is not valid
+                    //? sending info to player that the move is not valid he needs to repeat it
+                    if (isPlayer1Turn)
+                    {   
+                        //! 2 OUT ##########
+                        System.out.println(new Timestamp(System.currentTimeMillis()) + " NOT VALID MOVE BY PLAYER 1\n"); //! for debugging purposes
+                        toPlayer1.reset();
+                        toPlayer1.writeObject(new MoveNotValidMsg(1));
+                        toPlayer2.reset();
+                        toPlayer2.writeObject(new MoveNotValidMsg(1));
+                        
+                    }
+                    else 
+                    {
+                        //! 2 OUT ##########
+                        System.out.println(new Timestamp(System.currentTimeMillis()) + " NOT VALID MOVE BY PLAYER 2\n"); //! for debugging purposes
+                        toPlayer2.reset();
+                        toPlayer2.writeObject(new MoveNotValidMsg(2));
+                        toPlayer1.reset();
+                        toPlayer1.writeObject(new MoveNotValidMsg(2));
+                    }
+                }
+                else
+                {
                     processMove(x, y);
                     checkForCapturedStones(x, y);
-                    sendBoardState();
 
+                    //! 2 OUT ##########
+                    sendBoardState();
+                    
                     Thread.sleep(1000); //! for debugging purposes
                     switchTurns();
                 }
-                //TODO: Send that move not valid
-            // }
+
+            }
         }
         //TODO: handle this exception correctly
         catch (InterruptedException | IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
         }
+    }
+
+    private MoveMsg waitForPlayerMove() throws IOException, ClassNotFoundException
+    {
+        try
+        {   
+            if (isPlayer1Turn)
+            {   
+                //! 1 IN -> Waiting for move from player 1
+                MoveMsg moveMsg = (MoveMsg) fromPlayer1.readObject();
+                OkMsg okMsg = (OkMsg) fromPlayer2.readObject();
+                return moveMsg;
+
+            }
+            else 
+            {
+                //! 1 IN -> Waiting for move from player 2
+                MoveMsg moveMsg = (MoveMsg) fromPlayer2.readObject();
+                OkMsg okMsg = (OkMsg) fromPlayer1.readObject();
+                return moveMsg;
+            }
+
+        //TODO: handle this exception correctly
+        } catch (ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private void sendBoardState() throws IOException
+    {
+        BoardStateMsg boardStateMsg = new BoardStateMsg(board);
+
+        //! 2 OUT -> Sending board state to players
+        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1"); //! for debugging purposes
+        toPlayer1.writeObject(boardStateMsg);
+        toPlayer1.reset();
+        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 2 "); //! for debugging purposes
+        toPlayer2.writeObject(boardStateMsg);
+        toPlayer2.reset();
     }
 
     private void processMove(int x, int y)
@@ -198,54 +284,11 @@ public class GameLogicThread implements Runnable
         isPlayer1Turn = !isPlayer1Turn;
     }
 
-    private void sendBoardState() throws IOException
-    {
-        BoardStateMsg boardStateMsg = new BoardStateMsg(board);
-
-        //! 2 OUT -> Sending board state to players
-        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1\n"); //! for debugging purposes
-        toPlayer1.writeObject(boardStateMsg);
-        toPlayer1.reset();
-        System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 2 "); //! for debugging purposes
-        toPlayer2.writeObject(boardStateMsg);
-        toPlayer2.reset();
-    }
-
-
     //TODO: yet to be implemented
     private boolean isGameOver()
     {
         //TODO: Implement logic to determine if the game is over
         return false; // Placeholder
-    }
-
-    private MoveMsg waitForPlayerMove() throws IOException, ClassNotFoundException
-    {
-        try
-        {   
-            if (isPlayer1Turn)
-            {   
-                //! 1 IN -> Waiting for move from player 1
-                MoveMsg moveMsg = (MoveMsg) fromPlayer2.readObject();
-                OkMsg okMsg = (OkMsg) fromPlayer1.readObject();
-                return moveMsg;
-
-            }
-            else 
-            {
-                //! 1 IN -> Waiting for move from player 2
-                MoveMsg moveMsg = (MoveMsg) fromPlayer1.readObject();
-                OkMsg okMsg = (OkMsg) fromPlayer2.readObject();
-                return moveMsg;
-            }
-
-        //TODO: handle this exception correctly
-        } catch (ClassNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     private boolean isMoveValid(int x, int y)
