@@ -1,20 +1,21 @@
 package shared.messages;
 
 import shared.enums.MessageType;
-import shared.enums.Stone;
+import shared.enums.PlayerColors;
 
 public class GameJoinedMsg extends AbstractMessage
 {
     private int gameID;
-    private Stone stoneColor;
-    private boolean isPlayer1Turn;
+    private PlayerColors playerColor;
+    private PlayerColors whoseTurn;
+    // private boolean isPlayer1Turn;
 
-    public GameJoinedMsg(int gameID, Stone stoneColor, boolean isPlayer1Turn)
+    public GameJoinedMsg(int gameID, PlayerColors playerColor, PlayerColors whoseTurn)
     {
         type = MessageType.GAME_JOINED;
         this.gameID = gameID;
-        this.stoneColor = stoneColor;
-        this.isPlayer1Turn = isPlayer1Turn;
+        this.playerColor = playerColor;
+        this.whoseTurn = whoseTurn;
     }
 
     public int getGameID()
@@ -22,14 +23,14 @@ public class GameJoinedMsg extends AbstractMessage
         return gameID;
     }
 
-    public Stone getStoneColor()
+    public PlayerColors getPlayerColors()
     {
-        return stoneColor;
+        return playerColor;
     }
 
-    public boolean isPlayer1Turn()
+    public PlayerColors getWhoseTurn()
     {
-        return isPlayer1Turn;
+        return whoseTurn;
     }
 
     @Override
@@ -37,8 +38,8 @@ public class GameJoinedMsg extends AbstractMessage
     {
         return "GameJoinedMsg{" +
                 "gameID=" + gameID +
-                ", stoneColor=" + stoneColor +
-                ", isPlayerTurn=" + isPlayer1Turn +
+                ", playerColor=" + playerColor +
+                ", playerTurn=" +  whoseTurn +
                 '}';
     }
 }

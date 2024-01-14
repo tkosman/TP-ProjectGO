@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import shared.enums.BoardSize;
 import shared.enums.GameMode;
 import shared.enums.MessageType;
+import shared.enums.PlayerColors;
 import shared.enums.Stone;
 import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
@@ -29,10 +30,10 @@ public class Client implements Runnable
     private ObjectInputStream fromServer;
     private ObjectOutputStream toServer;
     private int playerNo;
-    private boolean isPlayer1Turn = true;
-    
-    private Stone playerColor;
+    // private boolean isPlayer1Turn = true;
+    private PlayerColors playerColor;
     private int gameID;
+    private PlayerColors whoseTurn = PlayerColors.BLACK;
 
     private Stone[][] board; //! for debugging purposes
 
@@ -69,8 +70,8 @@ public class Client implements Runnable
             //! 4 IN
             GameJoinedMsg gameJoinedMsg = (GameJoinedMsg)fromServer.readObject();
             gameID = gameJoinedMsg.getGameID();
-            playerColor = gameJoinedMsg.getStoneColor();
-            isPlayer1Turn = gameJoinedMsg.isPlayer1Turn();
+            playerColor = gameJoinedMsg.getPlayerColors();
+            whoseTurn = gameJoinedMsg.getWhoseTurn();
 
             System.out.println("Game ID: " + gameID);
 
@@ -89,13 +90,13 @@ public class Client implements Runnable
         {
             while (!isGameOver())
             {
-                System.out.println("\n\nTURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                System.out.println("\n\nTURN: " + whoseTurn);
                 //! EACH WILL BE SENT TO SERVER
                 if (isMyTurn())
                 {
                     //? This player turn
                     //! 1 OUT +++++++++ -> It's my turn and I'm sending move to server
-                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS PLAYER " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS PLAYER " + playerNo + " TURN: " + whoseTurn);
                     sendMoveToServer();
 
                     //! 2 IN ########## -> It's my turn and I'm waiting for server to send me info back
@@ -104,7 +105,7 @@ public class Client implements Runnable
                 else
                 {
                     // //! 1 OUT +++++++++ -> It's NOT my turn so I'm just sending OK to server
-                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS PLAYER " + playerNo + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS PLAYER " + playerNo + " TURN: " + whoseTurn);
                     sendOkToServer();
 
                     //! 2 IN ########## -> It's NOT my turn so I'm waiting for server to send me info back
@@ -128,7 +129,7 @@ public class Client implements Runnable
             switchTurns();
             //? Player did a valid move OR it was not his trun
             //? server sent back the updated board
-            System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + whoseTurn);
             BoardStateMsg boardStateMsg = (BoardStateMsg) message;
             board = boardStateMsg.getBoardState();
             printBoard();
@@ -139,11 +140,11 @@ public class Client implements Runnable
             //? we need to resent the move
             if (playerNo == ((MoveNotValidMsg)message).playerWhoDidNotValidMove())
             {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID BY #" + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE INVALID BY #" + playerNo  + " TURN: " + whoseTurn);
             }
             else
             {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID BY #" + playerNo  + " TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE INVALID BY #" + playerNo  + " TURN: " + whoseTurn);
             }
 
         }
@@ -162,12 +163,14 @@ public class Client implements Runnable
 
      private boolean isMyTurn()
      {
-        return isPlayer1Turn && playerNo % 2 == 1  || !isPlayer1Turn && playerNo % 2 == 0;
+        // return isPlayer1Turn && playerNo % 2 == 1  || !isPlayer1Turn && playerNo % 2 == 0;
+        return whoseTurn == playerColor;
     }
 
     private void switchTurns()
     {
-        isPlayer1Turn = !isPlayer1Turn;
+        // isPlayer1Turn = !isPlayer1Turn;
+        whoseTurn = (whoseTurn == PlayerColors.BLACK) ? PlayerColors.WHITE : PlayerColors.BLACK;
     }
 
     private void sendOkToServer() throws IOException

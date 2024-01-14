@@ -21,7 +21,7 @@ public class MoveNotValidMsg extends AbstractMessage
     public String toString()
     {
         return "MoveNotValidMsg{" +
-                " MOVE NOT VALID -> " +
+                " MOVE INVALID -> " +
                 "player1didNotValidMove=" + playerWhoDidNotValidMove +
                 '}';
     }

@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import shared.enums.BoardSize;
+import shared.enums.PlayerColors;
 import shared.enums.Stone;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
@@ -26,7 +27,8 @@ public class GameLogicThread implements Runnable
     private static int gameID = 0;
     private int boardSize;
     private Stone[][] board;
-    private boolean isPlayer1Turn = true;
+    // private boolean isPlayer1Turn = true;
+    private PlayerColors whoseTurn = PlayerColors.BLACK;
 
     //! I assume that player 1 is always black and player 2 is always white
 
@@ -54,9 +56,9 @@ public class GameLogicThread implements Runnable
 
         gameID++;
         //! 4 OUT
-        toPlayer1.writeObject(new GameJoinedMsg(gameID, Stone.BLACK, isPlayer1Turn));
+        toPlayer1.writeObject(new GameJoinedMsg(gameID, PlayerColors.BLACK, whoseTurn));
         toPlayer1.reset();
-        toPlayer2.writeObject(new GameJoinedMsg(gameID, Stone.WHITE, isPlayer1Turn));
+        toPlayer2.writeObject(new GameJoinedMsg(gameID, PlayerColors.WHITE, whoseTurn));
         toPlayer2.reset();
 
 
@@ -77,10 +79,10 @@ public class GameLogicThread implements Runnable
             while(!isGameOver())
             {
                 System.out.println("\n\n####################### GAME " + gameID + " #######################");
-                System.out.println("TURN: " + (isPlayer1Turn ? "BLACK" : "WHITE"));
+                System.out.println("TURN: " + whoseTurn);
 
                 MoveMsg moveMsg;
-                if (!isPlayer1Turn)
+                if (!whoseTurn.equals(PlayerColors.WHITE))
                 {
                     //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " Player BLACK playing"); //! for debugging purposes
@@ -106,12 +108,12 @@ public class GameLogicThread implements Runnable
 
                 if (!isMoveValid(x, y))
                 {
-                    //? move is not valid
-                    //? sending info to player that the move is not valid he needs to repeat it
-                    if (isPlayer1Turn)
+                    //? move is INVALID
+                    //? sending info to player that the move is INVALID he needs to repeat it
+                    if (whoseTurn.equals(PlayerColors.BLACK))
                     {   
                         //! 2 OUT ##########
-                        System.out.println(new Timestamp(System.currentTimeMillis()) + " NOT VALID MOVE BY PLAYER 1\n"); //! for debugging purposes
+                        System.out.println(new Timestamp(System.currentTimeMillis()) + " INVALID MOVE BY PLAYER 1\n"); //! for debugging purposes
                         toPlayer1.reset();
                         toPlayer1.writeObject(new MoveNotValidMsg(1));
                         toPlayer2.reset();
@@ -121,7 +123,7 @@ public class GameLogicThread implements Runnable
                     else 
                     {
                         //! 2 OUT ##########
-                        System.out.println(new Timestamp(System.currentTimeMillis()) + " NOT VALID MOVE BY PLAYER 2\n"); //! for debugging purposes
+                        System.out.println(new Timestamp(System.currentTimeMillis()) + " INVALID MOVE BY PLAYER 2\n"); //! for debugging purposes
                         toPlayer2.reset();
                         toPlayer2.writeObject(new MoveNotValidMsg(2));
                         toPlayer1.reset();
@@ -164,14 +166,14 @@ public class GameLogicThread implements Runnable
 
     private void processMove(int x, int y)
     {
-        board[x][y] = isPlayer1Turn ? Stone.BLACK : Stone.WHITE;
+        board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
     }
 
     //? this method will be called after each move. It will check for captured stones and remove them from the board
     private void checkForCapturedStones(int x, int y)
     {
-        Stone playerStone = isPlayer1Turn ? Stone.BLACK : Stone.WHITE;
-        Stone opponentStone = isPlayer1Turn ? Stone.WHITE : Stone.BLACK;
+        Stone playerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        Stone opponentStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
 
         //? we need to check the 4 directions around the stone
         captureGroupIfSurrounded(x + 1, y, opponentStone);
@@ -230,7 +232,7 @@ public class GameLogicThread implements Runnable
 
     private void switchTurns()
     {
-        isPlayer1Turn = !isPlayer1Turn;
+        whoseTurn = (whoseTurn == PlayerColors.BLACK) ? PlayerColors.WHITE : PlayerColors.BLACK;
     }
 
     //TODO: yet to be implemented
