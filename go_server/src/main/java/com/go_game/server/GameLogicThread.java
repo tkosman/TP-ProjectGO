@@ -41,6 +41,7 @@ public class GameLogicThread implements Runnable
         this.toPlayer2 = toPlayer2;
         this.fromPlayer2 = fromPlayer2;
 
+        //TODO: refactor this to an extern class
         if (enumBoardSize == BoardSize.NINE_X_NINE)
         {
             boardSize = 9;

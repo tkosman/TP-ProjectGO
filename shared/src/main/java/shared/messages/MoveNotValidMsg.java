@@ -4,6 +4,7 @@ import shared.enums.MessageType;
 
 public class MoveNotValidMsg extends AbstractMessage
 {
+    //TODO: change it to enum PlayerColors
     private int playerWhoDidNotValidMove;
 
     public MoveNotValidMsg(int playerWhoDidNotValidMove)
