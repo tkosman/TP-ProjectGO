@@ -208,7 +208,6 @@ public class Client implements Runnable
      private void sendMoveToServer() throws IOException
      {
         MoveMsg moveMsg = getPlayerMove();
-        System.out.println("MOVE: " + moveMsg); //! for debugging purposes
         toServer.writeObject(moveMsg);
         toServer.reset();
     }
@@ -219,7 +218,6 @@ public class Client implements Runnable
         System.out.println("Do you want to pass? (y/n)");
         String pass = scanner.nextLine();
         if (pass.equals("y")) {
-            System.out.println("HERE"); //! for debugging purposes
             return new MoveMsg(true);
         }
         System.out.print("Enter x coordinate: ");
