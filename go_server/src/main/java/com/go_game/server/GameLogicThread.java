@@ -27,6 +27,7 @@ public class GameLogicThread implements Runnable
     private static int gameID = 0;
     private int boardSize;
     private Stone[][] board;
+    private Stone[][] previousBoard;
     // private boolean isPlayer1Turn = true;
     private PlayerColors whoseTurn = PlayerColors.BLACK;
 
@@ -167,6 +168,8 @@ public class GameLogicThread implements Runnable
 
     private void processMove(int x, int y)
     {
+        copyBoardState(board, previousBoard); //? for KO situation
+
         board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
     }
 
@@ -252,7 +255,7 @@ public class GameLogicThread implements Runnable
             return false;
         }
     
-        //TODO: check ko situation & suicide move
+        //TODO: check for suicide move
         if (isKoSituation(x, y) || isSuicideMove(x, y)) {
             return false;
         }
@@ -260,11 +263,40 @@ public class GameLogicThread implements Runnable
         return true;
     }
     
-    //TODO: yet to be implemented
-    private boolean isKoSituation(int x, int y) {
-        // Implement the logic to check for a Ko situation
-        return false; // Placeholder
+    private boolean isKoSituation(int x, int y)
+    {
+        Stone originalState = board[x][y];
+
+        board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+
+        boolean isKo = isBoardStateEqual(previousBoard, board);
+
+        board[x][y] = originalState;
+
+        return isKo;
     }
+
+    private boolean isBoardStateEqual(Stone[][] board1, Stone[][] board2)
+    {
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                if (board1[i][j] != board2[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void copyBoardState(Stone[][] source, Stone[][] destination) 
+    {
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                destination[i][j] = source[i][j];
+            }
+        }
+    }
+    
     
     //TODO: yet to be implemented
     private boolean isSuicideMove(int x, int y) {
