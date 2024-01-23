@@ -255,7 +255,6 @@ public class GameLogicThread implements Runnable
             return false;
         }
     
-        //TODO: check for suicide move
         if (isKoSituation(x, y) || isSuicideMove(x, y)) {
             return false;
         }
@@ -297,12 +296,68 @@ public class GameLogicThread implements Runnable
         }
     }
     
-    
-    //TODO: yet to be implemented
     private boolean isSuicideMove(int x, int y) {
-        // Implement the logic to check if the move is a suicide move
-        return false; // Placeholder
+        if (isOutOfBoard(x, y) || board[x][y] != Stone.EMPTY) {
+            return false;
+        }
+    
+        Stone currentPlayerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        board[x][y] = currentPlayerStone;
+    
+        boolean captures = capturesOpponent(x, y, currentPlayerStone);
+    
+        boolean hasLiberty = hasLiberty(x, y, currentPlayerStone);
+    
+        board[x][y] = Stone.EMPTY;
+    
+        return !captures && !hasLiberty;
     }
+
+    private boolean hasLiberty(int x, int y, Stone stone) {
+        boolean[][] visited = new boolean[boardSize][boardSize];
+        return checkLiberty(x, y, stone, visited);
+    }
+    
+    private boolean checkLiberty(int x, int y, Stone stone, boolean[][] visited) {
+        if (isOutOfBoard(x, y) || visited[x][y]) {
+            return false;
+        }
+    
+        visited[x][y] = true;
+    
+        if (board[x][y] == Stone.EMPTY) {
+            return true;
+        } else if (board[x][y] != stone) {
+            return false;
+        }
+    
+        // Check all adjacent points
+        return checkLiberty(x + 1, y, stone, visited) ||
+               checkLiberty(x - 1, y, stone, visited) ||
+               checkLiberty(x, y + 1, stone, visited) ||
+               checkLiberty(x, y - 1, stone, visited);
+    }
+    
+    
+    private boolean capturesOpponent(int x, int y, Stone currentPlayerStone) {
+        Stone opponentStone = (currentPlayerStone == Stone.BLACK) ? Stone.WHITE : Stone.BLACK;
+        return checkCapture(x + 1, y, opponentStone) ||
+               checkCapture(x - 1, y, opponentStone) ||
+               checkCapture(x, y + 1, opponentStone) ||
+               checkCapture(x, y - 1, opponentStone);
+    }
+    
+    private boolean checkCapture(int x, int y, Stone opponentStone) {
+        if (isOutOfBoard(x, y) || board[x][y] != opponentStone) {
+            return false;
+        }
+    
+        ArrayList<Point> group = new ArrayList<>();
+        ArrayList<Point> liberties = new ArrayList<>();
+        findGroupWithLiberties(x, y, opponentStone, group, liberties);
+        return liberties.isEmpty();
+    }
+    
 
     //! for debugging purposes
     private void printBoard() {
