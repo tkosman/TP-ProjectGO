@@ -11,9 +11,11 @@ import shared.enums.PlayerColors;
 import shared.enums.Stone;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
+import shared.messages.GameOverMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
+import shared.messages.PlayerPassedMsg;
 
 
 
@@ -27,9 +29,10 @@ public class GameLogicThread implements Runnable
     private static int gameID = 0;
     private int boardSize;
     private Stone[][] board;
-    private Stone[][] previousBoard;
+    private Stone[][] previousBoard = new Stone[9][9]; //TODO: change size
     // private boolean isPlayer1Turn = true;
     private PlayerColors whoseTurn = PlayerColors.BLACK;
+    private boolean previousWasPass = false;
 
     //! I assume that player 1 is always black and player 2 is always white
 
@@ -89,6 +92,7 @@ public class GameLogicThread implements Runnable
                     //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " Player BLACK playing"); //! for debugging purposes
                     moveMsg = (MoveMsg) fromPlayer1.readObject();
+                    System.out.println(moveMsg); //! for debugging purposes
                     OkMsg okMsg = (OkMsg) fromPlayer2.readObject();
                 }
                 else
@@ -101,8 +105,31 @@ public class GameLogicThread implements Runnable
 
                 if (moveMsg.playerPassed())
                 {
-                    //TODO: implement pass logic
-                    System.exit(0);
+                    System.out.println(new Timestamp(System.currentTimeMillis()) + " PLAYER PASSED\n"); //! for debugging purposes
+                    if (previousWasPass)
+                    {
+                        //! 2 OUT ##########
+                        System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\n"); //! for debugging purposes
+                        //TODO: decide who is the winner
+                        toPlayer1.reset();
+                        toPlayer1.writeObject(new GameOverMsg("Both players passed", PlayerColors.WHITE));
+                        toPlayer2.reset();
+                        toPlayer2.writeObject(new GameOverMsg("Both players passed", PlayerColors.WHITE));
+                        break;
+                    }
+                    else
+                    {
+                        previousWasPass = true;
+                        toPlayer1.writeObject(new PlayerPassedMsg(whoseTurn));
+                        toPlayer2.reset();
+                        toPlayer2.writeObject(new PlayerPassedMsg(whoseTurn));
+                        switchTurns();
+                        continue;
+                    }
+                }
+                else
+                {
+                    previousWasPass = false;
                 }
 
                 int x = moveMsg.getX();
