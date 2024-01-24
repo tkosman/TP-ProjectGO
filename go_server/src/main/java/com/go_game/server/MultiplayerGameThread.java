@@ -34,27 +34,12 @@ public class MultiplayerGameThread implements Runnable
 
     //TODO: pass socket to close it later
     public MultiplayerGameThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
-                            ObjectInputStream fromPlayer2, BoardSize enumBoardSize) throws IOException
+                            ObjectInputStream fromPlayer2, int boardSize) throws IOException
     {
         this.toPlayer1 = toPlayer1;
         this.fromPlayer1 = fromPlayer1;
         this.toPlayer2 = toPlayer2;
         this.fromPlayer2 = fromPlayer2;
-
-        int boardSize = 0;
-        //TODO: refactor this to an extern class
-        if (enumBoardSize == BoardSize.NINE_X_NINE)
-        {
-            boardSize = 9;
-        }
-        else if (enumBoardSize == BoardSize.THIRTEEN_X_THIRTEEN)
-        {
-            boardSize = 13;
-        }
-        else if (enumBoardSize == BoardSize.NINETEEN_X_NINETEEN)
-        {
-            boardSize = 19;
-        }
 
         gameLogic = new GameLogic(boardSize);
         gameID++;
