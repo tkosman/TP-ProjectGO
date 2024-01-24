@@ -33,6 +33,8 @@ public class GameLogicThread implements Runnable
     // private boolean isPlayer1Turn = true;
     private PlayerColors whoseTurn = PlayerColors.BLACK;
     private boolean previousWasPass = false;
+    private int[] capturedStones = new int[2]; // Index 0 for Black, 1 for White
+    private boolean gameOver = false;
 
     //! I assume that player 1 is always black and player 2 is always white
 
@@ -110,12 +112,10 @@ public class GameLogicThread implements Runnable
                     {
                         //! 2 OUT ##########
                         System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\n"); //! for debugging purposes
-                        //TODO: decide who is the winner
-                        toPlayer1.reset();
-                        toPlayer1.writeObject(new GameOverMsg("Both players passed", PlayerColors.WHITE));
-                        toPlayer2.reset();
-                        toPlayer2.writeObject(new GameOverMsg("Both players passed", PlayerColors.WHITE));
-                        break;
+
+                        gameOver = true;
+
+                        continue;
                     }
                     else
                     {
@@ -230,6 +230,12 @@ public class GameLogicThread implements Runnable
             for (Point stone : group)
             {
                 board[stone.x][stone.y] = Stone.EMPTY;
+
+                if (whoseTurn == PlayerColors.BLACK) {
+                    capturedStones[0]++; // Black captures a white stone
+                } else {
+                    capturedStones[1]++; // White captures a black stone
+                }
             }
         }
     }
@@ -266,12 +272,22 @@ public class GameLogicThread implements Runnable
         whoseTurn = (whoseTurn == PlayerColors.BLACK) ? PlayerColors.WHITE : PlayerColors.BLACK;
     }
 
-    //TODO: yet to be implemented
-    private boolean isGameOver()
+    private boolean isGameOver() 
     {
-        //TODO: Implement logic to determine if the game is over
-        return false; // Placeholder
+        if (gameOver) {
+            int[] scores = calculateScore();
+            String resultMessage = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
+            try {
+                toPlayer1.writeObject(new GameOverMsg(resultMessage, PlayerColors.BLACK));
+                toPlayer2.writeObject(new GameOverMsg(resultMessage, PlayerColors.WHITE));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
     }
+    
 
     private boolean isMoveValid(int x, int y)
     {
@@ -421,4 +437,85 @@ public class GameLogicThread implements Runnable
             }
         }
     }
+
+    private TerritoryResult checkTerritory(int x, int y, boolean[][] visited) {
+        if (isOutOfBoard(x, y) || visited[x][y]) {
+            return new TerritoryResult(null, 0);
+        }
+    
+        visited[x][y] = true;
+        if (board[x][y] != Stone.EMPTY) {
+            return new TerritoryResult(getPlayerColor(board[x][y]), 0);
+        }
+    
+        TerritoryResult result = new TerritoryResult(null, 1);
+        TerritoryResult[] adjacentResults = {
+            checkTerritory(x + 1, y, visited),
+            checkTerritory(x - 1, y, visited),
+            checkTerritory(x, y + 1, visited),
+            checkTerritory(x, y - 1, visited)
+        };
+    
+        for (TerritoryResult adjacentResult : adjacentResults) {
+            if (adjacentResult.owner != null) {
+                if (result.owner == null) {
+                    result.owner = adjacentResult.owner;
+                } else if (result.owner != adjacentResult.owner) {
+                    result.owner = null;
+                    break;
+                }
+            }
+            result.size += adjacentResult.size;
+        }
+    
+        return result;
+    }
+
+    private PlayerColors getPlayerColor(Stone stone) {
+        return (stone == Stone.BLACK) ? PlayerColors.BLACK : PlayerColors.WHITE;
+    }
+    
+    //TODO: to be refactored
+    private class TerritoryResult 
+    {
+        PlayerColors owner;
+        int size;
+    
+        TerritoryResult(PlayerColors owner, int size) {
+            this.owner = owner;
+            this.size = size;
+        }
+    }
+    
+    private int[] calculateTerritory() {
+        boolean[][] visited = new boolean[boardSize][boardSize];
+        int blackTerritory = 0;
+        int whiteTerritory = 0;
+    
+        for (int x = 0; x < boardSize; x++) {
+            for (int y = 0; y < boardSize; y++) {
+                if (board[x][y] == Stone.EMPTY && !visited[x][y]) {
+                    TerritoryResult result = checkTerritory(x, y, visited);
+                    if (result.owner == PlayerColors.BLACK) {
+                        blackTerritory += result.size;
+                    } else if (result.owner == PlayerColors.WHITE) {
+                        whiteTerritory += result.size;
+                    }
+                }
+            }
+        }
+        return new int[] {blackTerritory, whiteTerritory};
+    }
+
+    private int[] calculateScore() {
+        int[] territoryScores = calculateTerritory();
+        int blackScore = territoryScores[0]; // Black's territory
+        int whiteScore = territoryScores[1]; // White's territory
+
+        blackScore += capturedStones[PlayerColors.BLACK.ordinal()];
+        whiteScore += capturedStones[PlayerColors.WHITE.ordinal()];
+    
+        return new int[] {blackScore, whiteScore};
+    }
+    
 }

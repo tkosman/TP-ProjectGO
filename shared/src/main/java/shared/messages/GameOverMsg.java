@@ -5,19 +5,19 @@ import shared.enums.PlayerColors;
 
 public class GameOverMsg extends AbstractMessage
 {
-    private String reason;
+    private String reasonOrResult;
     private PlayerColors winner;
 
-    public GameOverMsg(String reason, PlayerColors winner)
+    public GameOverMsg(String reasonOrResult, PlayerColors winner)
     {
         this.type = MessageType.GAME_OVER;
-        this.reason = reason;
+        this.reasonOrResult = reasonOrResult;
         this.winner = winner;
     }
 
-    public String getReason()
+    public String getReasonOrResult()
     {
-        return reason;
+        return reasonOrResult;
     }
 
     public PlayerColors getWinner()
@@ -29,7 +29,7 @@ public class GameOverMsg extends AbstractMessage
     public String toString()
     {
         return "GameOverMsg{" +
-                "reason='" + reason + '\'' +
+                "reasonOrResult='" + reasonOrResult + '\'' +
                 ", winner=" + winner +
                 '}';
     }

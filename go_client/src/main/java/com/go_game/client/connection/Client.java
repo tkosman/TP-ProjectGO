@@ -171,7 +171,7 @@ public class Client implements Runnable
             //? we need to print the winner and the reason
             GameOverMsg gameOverMsg = (GameOverMsg) message;
             PlayerColors winner = gameOverMsg.getWinner();
-            String reason = gameOverMsg.getReason();
+            String reason = gameOverMsg.getReasonOrResult();
             System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + reason);
             System.exit(0);
         }
