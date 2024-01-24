@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Timestamp;
 
-import shared.enums.BoardSize;
 import shared.enums.PlayerColors;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
@@ -33,13 +32,12 @@ public class MultiplayerGameThread implements Runnable
     //! I assume that player 1 is always black and player 2 is always white
 
     //TODO: pass socket to close it later
-    public MultiplayerGameThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
-                            ObjectInputStream fromPlayer2, int boardSize) throws IOException
+    public MultiplayerGameThread(ClientConnection player1Connection, ClientConnection player2Connection, int boardSize) throws IOException
     {
-        this.toPlayer1 = toPlayer1;
-        this.fromPlayer1 = fromPlayer1;
-        this.toPlayer2 = toPlayer2;
-        this.fromPlayer2 = fromPlayer2;
+        this.toPlayer1 = player1Connection.getOutputStream();
+        this.fromPlayer1 = player1Connection.getInputStream();
+        this.toPlayer2 = player2Connection.getOutputStream();
+        this.fromPlayer2 = player2Connection.getInputStream();
 
         gameLogic = new GameLogic(boardSize);
         gameID++;
