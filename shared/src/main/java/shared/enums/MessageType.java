@@ -12,4 +12,6 @@ public enum MessageType
     STRING_MESSAGE, //? used to send a string message
     GAME_JOINED,    //? sent to say that the game was joined
     MOVE_NOT_VALID, //? sent to say that the move was invalid
+    REPLAY_FETCH,   //? sent to show all the replays
+    CLOSE           //? sent to close connection
 }

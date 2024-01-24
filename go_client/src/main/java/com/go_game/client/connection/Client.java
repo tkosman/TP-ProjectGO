@@ -64,7 +64,7 @@ public class Client implements Runnable
             System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
             //! 3 OUT
-            toServer.writeObject(new ClientInfoMsg(BoardSize.NINE_X_NINE, GameMode.MULTI_PLAYER));
+            toServer.writeObject(new ClientInfoMsg(GameMode.REPLAY));
             toServer.reset();
 
             //! 4 IN
