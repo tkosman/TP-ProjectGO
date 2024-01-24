@@ -214,12 +214,10 @@ public class MultiplayerGameThread implements Runnable
     
         return true;
     }
-    
-    
 
     private void switchTurns()
     {
-        gameLogic.setWhoseTurn((gameLogic.getWhoseTurn() == PlayerColors.BLACK) ? PlayerColors.WHITE : PlayerColors.BLACK);
+        gameLogic.setWhoseTurn(gameLogic.getWhoseTurn().toggle());
     }
 
     private boolean isGameOver() 

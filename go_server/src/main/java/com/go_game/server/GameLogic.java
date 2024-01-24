@@ -25,15 +25,15 @@ public class GameLogic
 
     public void processMove(int x, int y)
     {
-        board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        board[x][y] = whoseTurn.toStone();
         previousBoard = copyBoard(board);
     }
 
     //? this method will be called after each move. It will check for captured stones and remove them from the board
     public void captureStones(int x, int y)
     {
-        // Stone playerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-        Stone opponentStone = (whoseTurn == PlayerColors.BLACK) ? Stone.WHITE : Stone.BLACK;
+        // Stone playerStone = whoseTurn.toStone();
+        Stone opponentStone = whoseTurn.getOpposite().toStone();
 
         //? we need to check the 4 directions around the stone
         captureGroupIfSurrounded(x + 1, y, opponentStone);
@@ -112,7 +112,7 @@ public class GameLogic
         }
 
         Stone[][] saveBoard = copyBoard(board);
-        board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        board[x][y] = whoseTurn.toStone();
         captureStones(x, y);
         boolean isKo = isBoardStateEqual(previousBoard, board);
         if(!isKo)
@@ -153,7 +153,7 @@ public class GameLogic
         }
         Stone[][] saveBoard = copyBoard(board);
 
-        Stone currentPlayerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        Stone currentPlayerStone = whoseTurn.toStone();
         board[x][y] = currentPlayerStone;
         boolean captures = capturesOpponent(x, y, currentPlayerStone);
         boolean hasLiberties = hasLiberty(x, y);
@@ -191,7 +191,7 @@ public class GameLogic
     
     private boolean capturesOpponent(int x, int y, Stone currentPlayerStone)
     {
-        Stone opponentStone = (currentPlayerStone == Stone.BLACK) ? Stone.WHITE : Stone.BLACK;
+        Stone opponentStone = whoseTurn.getOpposite().toStone();
         return checkCapture(x + 1, y, opponentStone) ||
                 checkCapture(x - 1, y, opponentStone) ||
                 checkCapture(x, y + 1, opponentStone) ||
@@ -278,7 +278,7 @@ public class GameLogic
     }
 
     private PlayerColors getPlayerColor(Stone stone) {
-        return (stone == Stone.BLACK) ? PlayerColors.BLACK : PlayerColors.WHITE;
+        return stone.toPlayerColors();
     }
 
     public float[] calculateScore()
@@ -303,11 +303,6 @@ public class GameLogic
         this.board = board;
     }
 
-    public void doProcessMove(int x, int y)
-    {
-        processMove(x, y);
-    }
-
     public void setPreviousBoard(Stone[][] previousBoard)
     {
         this.previousBoard = previousBoard;
@@ -316,22 +311,6 @@ public class GameLogic
     public Stone[][] getPreviousBoard()
     {
         return previousBoard;
-    }
-
-    public boolean testIsKoSituation(int x, int y) {
-        return isKoSituation(x, y);
-    }
-
-    public void setBoardSize(int boardSize) {
-        this.boardSize = boardSize;
-    }
-
-    public void testCaptureStones(int x, int y) {
-        captureStones(x, y);
-    }
-
-    public boolean testIsSuicideMove(int x, int y) {
-        return isSuicideMove(x, y);
     }
 
     public PlayerColors getWhoseTurn() {

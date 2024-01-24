@@ -12,12 +12,12 @@ import shared.enums.PlayerColors;
 import shared.enums.Stone;
 
 public class GameLogicTest {
-    private GameLogic gameLogicThread;
+    private GameLogic gameLogic;
 
     @BeforeEach
     void setUp() throws IOException
     {
-        gameLogicThread = new GameLogic(9);
+        gameLogic = new GameLogic(9);
     }
 
     // public static void main(String[] args)
@@ -28,7 +28,7 @@ public class GameLogicTest {
     @Test
     void testBoardInitialization()
     {
-        Stone[][] board = gameLogicThread.getBoard(); // Assuming getBoard() is a public method in GameLogicThread
+        Stone[][] board = gameLogic.getBoard(); // Assuming getBoard() is a public method in gameLogic
         assertEquals(9, board.length); // Check if the board length is correct for 9x9 board
         assertEquals(9, board[0].length); // Check if the width of the board is correct
         // Check if all positions are initialized to Stone.EMPTY
@@ -48,8 +48,8 @@ public class GameLogicTest {
         {
             for (int j = 0; j < 9; j++)
             {
-                gameLogicThread.doProcessMove(i, j);
-                Stone[][] board = gameLogicThread.getBoard();
+                gameLogic.processMove(i, j);
+                Stone[][] board = gameLogic.getBoard();
                 assertEquals(Stone.BLACK, board[i][j], "After the first move, the position should have a BLACK stone");
             }
         }
@@ -58,150 +58,150 @@ public class GameLogicTest {
     @Test
     void testInvalidMoveProcessing()
     {
-        gameLogicThread.doProcessMove(4, 4);
+        gameLogic.processMove(4, 4);
 
-        assertFalse(gameLogicThread.isInBoundsAndEmptySpace(4, 4), "Move should be invalid for an already occupied position");
-        assertFalse(gameLogicThread.isInBoundsAndEmptySpace(-1, 4), "Move should be invalid for out-of-bounds positions");
-        assertFalse(gameLogicThread.isInBoundsAndEmptySpace(9, 9), "Move should be invalid for out-of-bounds positions");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(4, 4), "Move should be invalid for an already occupied position");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(-1, 4), "Move should be invalid for out-of-bounds positions");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(9, 9), "Move should be invalid for out-of-bounds positions");
     }
 
     @Test
     public void testCaptureSingleStone() 
     {
-        gameLogicThread = new GameLogic(3);
-        gameLogicThread.setBoard(decodeBoardString(".B.\\BWB\\.B."));
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
-        gameLogicThread.testCaptureStones(2, 1);
-        assertEquals(gameLogicThread.getBoard()[1][1], Stone.EMPTY, "The stone at (1,1) should be captured and thus EMPTY");
+        gameLogic = new GameLogic(3);
+        gameLogic.setBoard(decodeBoardString(".B.\\BWB\\.B."));
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
+        gameLogic.captureStones(2, 1);
+        assertEquals(gameLogic.getBoard()[1][1], Stone.EMPTY, "The stone at (1,1) should be captured and thus EMPTY");
     }
 
     @Test
     public void testCaptureSingleStoneDifferentScenario()
     {
-        GameLogic gameLogicThread = new GameLogic(5);
-        gameLogicThread.setBoard(decodeBoardString(".....\\..B\\.BWB\\..B\\....."));
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
-        gameLogicThread.testCaptureStones(2, 1);
-        assertEquals(gameLogicThread.getBoard()[2][2], Stone.EMPTY, "The white stone should be captured");
+        GameLogic gameLogic = new GameLogic(5);
+        gameLogic.setBoard(decodeBoardString(".....\\..B\\.BWB\\..B\\....."));
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
+        gameLogic.captureStones(2, 1);
+        assertEquals(gameLogic.getBoard()[2][2], Stone.EMPTY, "The white stone should be captured");
     }
 
     @Test
     public void testCaptureMultipleStones() 
     {
-        GameLogic gameLogicThread = new GameLogic(5);
-        gameLogicThread.setBoard(decodeBoardString(".BB..\\BWWB.\\BWWB.\\BWWB.\\.BB..\\"));
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
-        gameLogicThread.testCaptureStones(2, 0);
+        gameLogic = new GameLogic(5);
+        gameLogic.setBoard(decodeBoardString(".BB..\\BWWB.\\BWWB.\\BWWB.\\.BB..\\"));
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
+        gameLogic.captureStones(2, 0);
 
         assertAll("Multiple stones should be captured",
-            () -> assertEquals(gameLogicThread.getBoard()[1][1], Stone.EMPTY, "Expected the stone at (1,1) to be captured and thus EMPTY"),
-            () -> assertEquals(gameLogicThread.getBoard()[1][2], Stone.EMPTY, "Expected the stone at (1,2) to be captured and thus EMPTY"),
-            () -> assertEquals(gameLogicThread.getBoard()[1][3], Stone.EMPTY, "Expected the stone at (1,3) to be captured and thus EMPTY"),
-            () -> assertEquals(gameLogicThread.getBoard()[2][1], Stone.EMPTY, "Expected the stone at (2,1) to be captured and thus EMPTY"),
-            () -> assertEquals(gameLogicThread.getBoard()[2][2], Stone.EMPTY, "Expected the stone at (2,2) to be captured and thus EMPTY"),
-            () -> assertEquals(gameLogicThread.getBoard()[2][3], Stone.EMPTY, "Expected the stone at (2,3) to be captured and thus EMPTY")
+            () -> assertEquals(gameLogic.getBoard()[1][1], Stone.EMPTY, "Expected the stone at (1,1) to be captured and thus EMPTY"),
+            () -> assertEquals(gameLogic.getBoard()[1][2], Stone.EMPTY, "Expected the stone at (1,2) to be captured and thus EMPTY"),
+            () -> assertEquals(gameLogic.getBoard()[1][3], Stone.EMPTY, "Expected the stone at (1,3) to be captured and thus EMPTY"),
+            () -> assertEquals(gameLogic.getBoard()[2][1], Stone.EMPTY, "Expected the stone at (2,1) to be captured and thus EMPTY"),
+            () -> assertEquals(gameLogic.getBoard()[2][2], Stone.EMPTY, "Expected the stone at (2,2) to be captured and thus EMPTY"),
+            () -> assertEquals(gameLogic.getBoard()[2][3], Stone.EMPTY, "Expected the stone at (2,3) to be captured and thus EMPTY")
         );
     }
 
     @Test
     public void testCaptureMultipleStonesDifferentScenario()
     {
-        gameLogicThread = new GameLogic(5);
-        gameLogicThread.setBoard(decodeBoardString(".....\\.BBB.\\BWWB.\\BWWB.\\.BB..\\"));
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
-        gameLogicThread.testCaptureStones(3, 3);
+        gameLogic = new GameLogic(5);
+        gameLogic.setBoard(decodeBoardString(".....\\.BBB.\\BWWB.\\BWWB.\\.BB..\\"));
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
+        gameLogic.captureStones(3, 3);
 
         assertAll("Multiple stones in a different scenario should be captured",
-            () -> assertEquals(gameLogicThread.getBoard()[1][2], Stone.EMPTY, "The white stone at (1,2) should be captured"),
-            () -> assertEquals(gameLogicThread.getBoard()[1][3], Stone.EMPTY, "The white stone at (1,3) should be captured"),
-            () -> assertEquals(gameLogicThread.getBoard()[2][2], Stone.EMPTY, "The white stone at (2,2) should be captured"),
-            () -> assertEquals(gameLogicThread.getBoard()[2][3], Stone.EMPTY, "The white stone at (2,3) should be captured")
+            () -> assertEquals(gameLogic.getBoard()[1][2], Stone.EMPTY, "The white stone at (1,2) should be captured"),
+            () -> assertEquals(gameLogic.getBoard()[1][3], Stone.EMPTY, "The white stone at (1,3) should be captured"),
+            () -> assertEquals(gameLogic.getBoard()[2][2], Stone.EMPTY, "The white stone at (2,2) should be captured"),
+            () -> assertEquals(gameLogic.getBoard()[2][3], Stone.EMPTY, "The white stone at (2,3) should be captured")
         );
     }
 
     @Test
     public void testIsKoSituationOne()
     {
-        gameLogicThread = new GameLogic(4);
+        gameLogic = new GameLogic(4);
         String boardSetup =  ".BW.\\"
                             + "B.BW\\"
                             + ".BW.\\"
                             + "....\\";
-        gameLogicThread.setPreviousBoard(decodeBoardString(boardSetup));
+        gameLogic.setPreviousBoard(decodeBoardString(boardSetup));
 
         Stone[][] boardAfterBlackMove = decodeBoardString(".BW.\\"
                                                         + "BW.W\\"
                                                         + ".BW.\\"
                                                         + "....\\");
-        gameLogicThread.setBoard(boardAfterBlackMove);
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
+        gameLogic.setBoard(boardAfterBlackMove);
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
 
         // Check for Ko at (2, 1) - where White would recapture
-        assertTrue(gameLogicThread.testIsKoSituation(2, 1), "The method should identify a Ko situation correctly");
+        assertTrue(gameLogic.isKoSituation(2, 1), "The method should identify a Ko situation correctly");
     }
 
     @Test
     public void testIsKoSituationTwo() {
-        gameLogicThread = new GameLogic(5);
+        gameLogic = new GameLogic(5);
         String previousBoardSetup =  ".....\\"
                                     + "..B..\\"
                                     + ".BWB.\\"
                                     + "..B..\\"
                                     + ".....\\";
 
-        gameLogicThread.setPreviousBoard(decodeBoardString(previousBoardSetup));
+        gameLogic.setPreviousBoard(decodeBoardString(previousBoardSetup));
         String currentBoardSetup =    ".....\\"
                                     + "..B..\\"
                                     + ".BBB.\\"
                                     + "..B..\\"
                                     + ".....\\";
-        gameLogicThread.setBoard(decodeBoardString(currentBoardSetup));
-        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
+        gameLogic.setBoard(decodeBoardString(currentBoardSetup));
+        gameLogic.setWhoseTurn(PlayerColors.WHITE);
 
         // Check for Ko at (2, 2) - where White would recapture
-        assertTrue(gameLogicThread.testIsKoSituation(2, 2), "The method should identify a Ko situation correctly");
+        assertTrue(gameLogic.isKoSituation(2, 2), "The method should identify a Ko situation correctly");
     }    
     
     @Test
     public void testSuicideMoveOne() {
-        gameLogicThread = new GameLogic(5);
+        gameLogic = new GameLogic(5);
         String boardSetup =  ".....\\"
                             + "..B..\\"
                             + ".B.B.\\"
                             + "..B..\\"
                             + ".....\\";
-        gameLogicThread.setBoard(decodeBoardString(boardSetup));
-        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
-        assertTrue(gameLogicThread.testIsSuicideMove(2, 2), "Placing a stone at (2,2) should be identified as a suicide move");
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+        gameLogic.setWhoseTurn(PlayerColors.WHITE);
+        assertTrue(gameLogic.isSuicideMove(2, 2), "Placing a stone at (2,2) should be identified as a suicide move");
     }
 
     @Test
     public void testSuicideMoveTwo()
     {
-        gameLogicThread = new GameLogic(4);
+        gameLogic = new GameLogic(4);
         String boardSetup =   "....\\"
                             + ".WWW\\"
                             + "WBBB\\"
                             + "WWB.\\";
-        gameLogicThread.setBoard(decodeBoardString(boardSetup));
-        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
-        assertFalse(gameLogicThread.testIsSuicideMove(3, 3), "Placing a stone at (3,1) should not be identified as a suicide move");
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+        gameLogic.setWhoseTurn(PlayerColors.WHITE);
+        assertFalse(gameLogic.isSuicideMove(3, 3), "Placing a stone at (3,1) should not be identified as a suicide move");
     }
 
     @Test
     public void testSuicideMoveThree()
     {
-        gameLogicThread = new GameLogic(3);
+        gameLogic = new GameLogic(3);
         String boardSetup =   ".W.\\"
                             + "W.B\\"
                             + ".B.";
-        gameLogicThread.setBoard(decodeBoardString(boardSetup));
-        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
-        assertFalse(gameLogicThread.testIsSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+        gameLogic.setWhoseTurn(PlayerColors.WHITE);
+        assertFalse(gameLogic.isSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
 
-        gameLogicThread.setBoard(decodeBoardString(boardSetup));
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
-        assertFalse(gameLogicThread.testIsSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
+        assertFalse(gameLogic.isSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
     }
 
     private static Stone[][] decodeBoardString(String boardString)
