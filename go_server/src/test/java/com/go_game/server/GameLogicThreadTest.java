@@ -35,7 +35,7 @@ public class GameLogicThreadTest {
 
     // public static void main(String[] args)
     // {
-    //     testIsAnotherIsKoSituation();
+    //     testBoardSituationFromImage();
     // }
 
     @Test
@@ -175,6 +175,34 @@ public class GameLogicThreadTest {
         assertTrue(gameLogicThread.testIsKoSituation(2, 2), "The method should identify a Ko situation correctly");
     }    
     
+    @Test
+    public void testSuicideMove() {
+        gameLogicThread = new GameLogicThread(5);
+        String boardSetup =  ".....\\"
+                            + "..B..\\"
+                            + ".B.B.\\"
+                            + "..B..\\"
+                            + ".....\\";
+        gameLogicThread.setBoard(decodeBoardString(boardSetup));
+        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
+        assertTrue(gameLogicThread.testIsSuicideMove(2, 2), "Placing a stone at (2,2) should be identified as a suicide move");
+    }
+
+    @Test
+    public void testBoardSituationFromImage()
+    {
+        gameLogicThread = new GameLogicThread(4); // Assuming a 7x7 board based on the image
+
+        // Board setup string based on the image
+        String boardSetup =   "....\\"
+                            + ".WWW\\"
+                            + "WBBB\\"
+                            + "WWB.\\";
+        gameLogicThread.setBoard(decodeBoardString(boardSetup));
+        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
+        assertFalse(gameLogicThread.testIsSuicideMove(3, 3), "Placing a stone at F1 (3,1) should not be identified as a suicide move");
+    }
+
     private static Stone[][] decodeBoardString(String boardString)
     {
         int boardSize = boardString.indexOf("\\");
