@@ -1,42 +1,29 @@
 package com.go_game.server;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
-import shared.enums.BoardSize;
 import shared.enums.PlayerColors;
 import shared.enums.Stone;
-import shared.messages.BoardStateMsg;
-import shared.messages.GameJoinedMsg;
-import shared.messages.GameOverMsg;
-import shared.messages.MoveMsg;
-import shared.messages.MoveNotValidMsg;
-import shared.messages.OkMsg;
-import shared.messages.PlayerPassedMsg;
 
-public class GameLogicThreadTest {
-    private MultiplayerGameThread gameLogicThread;
+public class GameLogicTest {
+    private GameLogic gameLogicThread;
 
     @BeforeEach
     void setUp() throws IOException
     {
-        gameLogicThread = new MultiplayerGameThread(9);
+        gameLogicThread = new GameLogic(9);
     }
 
-    public static void main(String[] args)
-    {
-        testSuicideMoveThree();
-    }
+    // public static void main(String[] args)
+    // {
+    //     testSuicideMoveThree();
+    // }
 
     @Test
     void testBoardInitialization()
@@ -73,15 +60,15 @@ public class GameLogicThreadTest {
     {
         gameLogicThread.doProcessMove(4, 4);
 
-        assertFalse(gameLogicThread.getIsMoveValid(4, 4), "Move should be invalid for an already occupied position");
-        assertFalse(gameLogicThread.getIsMoveValid(-1, 4), "Move should be invalid for out-of-bounds positions");
-        assertFalse(gameLogicThread.getIsMoveValid(9, 9), "Move should be invalid for out-of-bounds positions");
+        assertFalse(gameLogicThread.isInBoundsAndEmptySpace(4, 4), "Move should be invalid for an already occupied position");
+        assertFalse(gameLogicThread.isInBoundsAndEmptySpace(-1, 4), "Move should be invalid for out-of-bounds positions");
+        assertFalse(gameLogicThread.isInBoundsAndEmptySpace(9, 9), "Move should be invalid for out-of-bounds positions");
     }
 
     @Test
     public void testCaptureSingleStone() 
     {
-        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(3);
+        gameLogicThread = new GameLogic(3);
         gameLogicThread.setBoard(decodeBoardString(".B.\\BWB\\.B."));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(2, 1);
@@ -91,7 +78,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureSingleStoneDifferentScenario()
     {
-        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(5);
+        GameLogic gameLogicThread = new GameLogic(5);
         gameLogicThread.setBoard(decodeBoardString(".....\\..B\\.BWB\\..B\\....."));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(2, 1);
@@ -101,7 +88,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureMultipleStones() 
     {
-        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(5);
+        GameLogic gameLogicThread = new GameLogic(5);
         gameLogicThread.setBoard(decodeBoardString(".BB..\\BWWB.\\BWWB.\\BWWB.\\.BB..\\"));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(2, 0);
@@ -119,7 +106,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureMultipleStonesDifferentScenario()
     {
-        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(5);
+        gameLogicThread = new GameLogic(5);
         gameLogicThread.setBoard(decodeBoardString(".....\\.BBB.\\BWWB.\\BWWB.\\.BB..\\"));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(3, 3);
@@ -135,7 +122,7 @@ public class GameLogicThreadTest {
     @Test
     public void testIsKoSituationOne()
     {
-        gameLogicThread = new MultiplayerGameThread(4);
+        gameLogicThread = new GameLogic(4);
         String boardSetup =  ".BW.\\"
                             + "B.BW\\"
                             + ".BW.\\"
@@ -155,7 +142,7 @@ public class GameLogicThreadTest {
 
     @Test
     public void testIsKoSituationTwo() {
-        gameLogicThread = new MultiplayerGameThread(5);
+        gameLogicThread = new GameLogic(5);
         String previousBoardSetup =  ".....\\"
                                     + "..B..\\"
                                     + ".BWB.\\"
@@ -177,7 +164,7 @@ public class GameLogicThreadTest {
     
     @Test
     public void testSuicideMoveOne() {
-        gameLogicThread = new MultiplayerGameThread(5);
+        gameLogicThread = new GameLogic(5);
         String boardSetup =  ".....\\"
                             + "..B..\\"
                             + ".B.B.\\"
@@ -191,7 +178,7 @@ public class GameLogicThreadTest {
     @Test
     public void testSuicideMoveTwo()
     {
-        gameLogicThread = new MultiplayerGameThread(4);
+        gameLogicThread = new GameLogic(4);
         String boardSetup =   "....\\"
                             + ".WWW\\"
                             + "WBBB\\"
@@ -202,9 +189,9 @@ public class GameLogicThreadTest {
     }
 
     @Test
-    public static void testSuicideMoveThree()
+    public void testSuicideMoveThree()
     {
-        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(3);
+        gameLogicThread = new GameLogic(3);
         String boardSetup =   ".W.\\"
                             + "W.B\\"
                             + ".B.";
@@ -261,25 +248,25 @@ public class GameLogicThreadTest {
         return board;
     }
     
-    private static void printBoard(Stone[][] board) {
-        int boardSize = board.length;
-        for (int y = 0; y < boardSize; y++) {
-            for (int x = 0; x < boardSize; x++) {
-                switch (board[x][y]) {
-                    case BLACK:
-                        System.out.print("B ");
-                        break;
-                    case WHITE:
-                        System.out.print("W ");
-                        break;
-                    default:
-                        System.out.print(". ");
-                        break;
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-        System.out.println();
-    }
+    // private static void printBoard(Stone[][] board) {
+    //     int boardSize = board.length;
+    //     for (int y = 0; y < boardSize; y++) {
+    //         for (int x = 0; x < boardSize; x++) {
+    //             switch (board[x][y]) {
+    //                 case BLACK:
+    //                     System.out.print("B ");
+    //                     break;
+    //                 case WHITE:
+    //                     System.out.print("W ");
+    //                     break;
+    //                 default:
+    //                     System.out.print(". ");
+    //                     break;
+    //             }
+    //         }
+    //         System.out.println();
+    //     }
+    //     System.out.println();
+    //     System.out.println();
+    // }
 }

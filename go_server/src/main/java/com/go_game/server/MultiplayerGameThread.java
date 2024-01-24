@@ -4,12 +4,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import shared.enums.BoardSize;
 import shared.enums.PlayerColors;
-import shared.enums.Stone;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
 import shared.messages.GameOverMsg;
@@ -28,24 +25,12 @@ public class MultiplayerGameThread implements Runnable
     private ObjectOutputStream toPlayer2;
     private ObjectInputStream fromPlayer2;
     private static int gameID = 0;
-    private int boardSize;
-    private Stone[][] board;
-    private Stone[][] previousBoard;
-    private PlayerColors whoseTurn = PlayerColors.BLACK;
     private boolean previousWasPass = false;
-    private int[] capturedStones = new int[2]; // Index 0 for Black, 1 for White
     private boolean gameOver = false;
 
+    private GameLogic gameLogic;
+
     //! I assume that player 1 is always black and player 2 is always white
-
-
-    //? constructor for tests
-    public MultiplayerGameThread(int boardSize)
-    {
-        this.boardSize = boardSize;
-        initializeBoard();
-        gameID++;
-    }
 
     //TODO: pass socket to close it later
     public MultiplayerGameThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
@@ -56,6 +41,7 @@ public class MultiplayerGameThread implements Runnable
         this.toPlayer2 = toPlayer2;
         this.fromPlayer2 = fromPlayer2;
 
+        int boardSize = 0;
         //TODO: refactor this to an extern class
         if (enumBoardSize == BoardSize.NINE_X_NINE)
         {
@@ -70,15 +56,15 @@ public class MultiplayerGameThread implements Runnable
             boardSize = 19;
         }
 
+        gameLogic = new GameLogic(boardSize);
         gameID++;
+
         //! 4 OUT
-        toPlayer1.writeObject(new GameJoinedMsg(gameID, PlayerColors.BLACK, whoseTurn));
+        toPlayer1.writeObject(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
         toPlayer1.reset();
-        toPlayer2.writeObject(new GameJoinedMsg(gameID, PlayerColors.WHITE, whoseTurn));
+        toPlayer2.writeObject(new GameJoinedMsg(gameID, PlayerColors.WHITE, gameLogic.getWhoseTurn()));
         toPlayer2.reset();
 
-
-        initializeBoard();
 
         //! HANDSHAKE FINISHED
         Thread fred = new Thread(this);
@@ -95,10 +81,10 @@ public class MultiplayerGameThread implements Runnable
             while(!isGameOver())
             {
                 System.out.println("\n\n####################### GAME " + gameID + " #######################");
-                System.out.println("TURN: " + whoseTurn);
+                System.out.println("TURN: " + gameLogic.getWhoseTurn());
 
                 MoveMsg moveMsg;
-                if (!whoseTurn.equals(PlayerColors.WHITE)) 
+                if (!gameLogic.getWhoseTurn().equals(PlayerColors.WHITE)) 
                 {
                     //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " Player BLACK playing"); //! for debugging purposes
@@ -129,9 +115,9 @@ public class MultiplayerGameThread implements Runnable
                     else
                     {
                         previousWasPass = true;
-                        toPlayer1.writeObject(new PlayerPassedMsg(whoseTurn));
+                        toPlayer1.writeObject(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
                         toPlayer2.reset();
-                        toPlayer2.writeObject(new PlayerPassedMsg(whoseTurn));
+                        toPlayer2.writeObject(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
                         switchTurns();
                         continue;
                     }
@@ -148,7 +134,7 @@ public class MultiplayerGameThread implements Runnable
                 {
                     //? move is INVALID
                     //? sending info to player that the move is INVALID he needs to repeat it
-                    if (whoseTurn.equals(PlayerColors.BLACK))
+                    if (gameLogic.getWhoseTurn().equals(PlayerColors.BLACK))
                     {   
                         //! 2 OUT ##########
                         System.out.println(new Timestamp(System.currentTimeMillis()) + " INVALID MOVE BY PLAYER 1\n"); //! for debugging purposes
@@ -170,10 +156,10 @@ public class MultiplayerGameThread implements Runnable
                 }
                 else
                 {
-                    processMove(x, y);
-                    captureStones(x, y);
+                    gameLogic.processMove(x, y);
+                    gameLogic.captureStones(x, y);
 
-                    float[] scores = calculateScore();
+                    float[] scores = gameLogic.calculateScore();
                     System.out.println("Black: " + scores[0] + ", White: " + scores[1]);
 
                     //! 2 OUT ##########
@@ -194,7 +180,7 @@ public class MultiplayerGameThread implements Runnable
 
     private void sendBoardState() throws IOException
     {
-        BoardStateMsg boardStateMsg = new BoardStateMsg(board);
+        BoardStateMsg boardStateMsg = new BoardStateMsg(gameLogic.getBoard());
 
         //! 2 ########## OUT -> Sending board state to players
         System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1"); //! for debugging purposes
@@ -205,88 +191,41 @@ public class MultiplayerGameThread implements Runnable
         toPlayer2.reset();
     }
 
-    private void processMove(int x, int y)
+    
+    private boolean isMoveValid(int x, int y)
     {
-        board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-        previousBoard = copyBoard(board);
-    }
-
-    //? this method will be called after each move. It will check for captured stones and remove them from the board
-    private void captureStones(int x, int y)
-    {
-        Stone playerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-        Stone opponentStone = (whoseTurn == PlayerColors.BLACK) ? Stone.WHITE : Stone.BLACK;
-
-        //? we need to check the 4 directions around the stone
-        captureGroupIfSurrounded(x + 1, y, opponentStone);
-        captureGroupIfSurrounded(x - 1, y, opponentStone);
-        captureGroupIfSurrounded(x, y + 1, opponentStone);
-        captureGroupIfSurrounded(x, y - 1, opponentStone);
-    }
-
-    private void captureGroupIfSurrounded(int x, int y, Stone opponentStone)
-    {
-        //? if the stone is out of board or it is not an opponent stone, we can simply return
-        if (isOutOfBoard(x, y) || board[x][y] != opponentStone)
+        
+        //? check for basic board bounds and empty space
+        if (!gameLogic.isInBoundsAndEmptySpace(x, y))
         {
-            return;
+            return false;
         }
 
-        ArrayList<Point> group = new ArrayList<>();
-        ArrayList<Point> liberties = new ArrayList<>();
-        findGroupWithLiberties(x, y, opponentStone, group, liberties);
-
-        if (liberties.isEmpty())
+        else if (gameLogic.isKoSituation(x, y))
         {
-            for (Point stone : group)
-            {
-                board[stone.x][stone.y] = Stone.EMPTY;
-
-                if (whoseTurn == PlayerColors.BLACK) {
-                    capturedStones[0]++; // Black captures a white stone
-                } else {
-                    capturedStones[1]++; // White captures a black stone
-                }
-            }
+            System.out.println("isKoSituation");
+            return false;
         }
-    }
-    //? check if the stone is out of board
-    private boolean isOutOfBoard(int x, int y)
-    {
-        return x < 0 || x >= boardSize || y < 0 || y >= boardSize;
-    }
-
-    //? this method will recursively find the group of stones with their liberties
-    private void findGroupWithLiberties(int x, int y, Stone stone, ArrayList<Point> group, ArrayList<Point> liberties)
-    {
-        if (isOutOfBoard(x, y) || group.contains(new Point(x, y)))
+        else if (gameLogic.isSuicideMove(x, y))
         {
-            return;
+            System.out.println("isSuicideMove");
+            return false;
         }
     
-        if (board[x][y] == stone)
-        {
-            group.add(new Point(x, y));
-            findGroupWithLiberties(x + 1, y, stone, group, liberties);
-            findGroupWithLiberties(x - 1, y, stone, group, liberties);
-            findGroupWithLiberties(x, y + 1, stone, group, liberties);
-            findGroupWithLiberties(x, y - 1, stone, group, liberties);
-        }
-        else if (board[x][y] == Stone.EMPTY)
-        {
-            liberties.add(new Point(x, y));
-        }
+        return true;
     }
+    
+    
 
     private void switchTurns()
     {
-        whoseTurn = (whoseTurn == PlayerColors.BLACK) ? PlayerColors.WHITE : PlayerColors.BLACK;
+        gameLogic.setWhoseTurn((gameLogic.getWhoseTurn() == PlayerColors.BLACK) ? PlayerColors.WHITE : PlayerColors.BLACK);
     }
 
     private boolean isGameOver() 
     {
         if (gameOver) {
-            float[] scores = calculateScore();
+            float[] scores = gameLogic.calculateScore();
             String resultMessage = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
             try {
                 toPlayer1.writeObject(new GameOverMsg(resultMessage, PlayerColors.BLACK));
@@ -298,295 +237,28 @@ public class MultiplayerGameThread implements Runnable
         }
         return false;
     }
-    
-
-    private boolean isMoveValid(int x, int y)
-    {
-        
-        //? check for basic board bounds and empty space
-        if (x < 0 || x >= boardSize || y < 0 || y >= boardSize || board[x][y] != Stone.EMPTY)
-        {
-            return false;
-        }
-
-        if (isKoSituation(x, y))
-        {
-            System.out.println("isKoSituation");
-            return false;
-        }
-        else if (isSuicideMove(x, y))
-        {
-            System.out.println("isSuicideMove");
-            return false;
-        }
-    
-        return true;
-    }
-    
-    private boolean isKoSituation(int x, int y)
-    {
-        if (previousBoard == null)
-        {
-            return false;
-        }
-
-        Stone[][] saveBoard = copyBoard(board);
-        board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-        captureStones(x, y);
-        boolean isKo = isBoardStateEqual(previousBoard, board);
-        if(!isKo)
-        {
-            board = saveBoard;
-            return false;
-        }
-        return true;
-    }
-
-    private boolean isBoardStateEqual(Stone[][] board1, Stone[][] board2)
-    {
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                if (board1[i][j] != board2[i][j]) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private Stone[][] copyBoard(Stone[][] source)
-    {
-        Stone[][] destination = new Stone[source.length][];
-        for (int i = 0; i < source.length; i++)
-        {
-            destination[i] = Arrays.copyOf(source[i], source[i].length);
-        }
-        return destination;
-    }
-
-    private boolean isSuicideMove(int x, int y)
-    {
-        if (isOutOfBoard(x, y) || board[x][y] != Stone.EMPTY)
-        {
-            return false;
-        }
-        Stone[][] saveBoard = copyBoard(board);
-
-        Stone currentPlayerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-        board[x][y] = currentPlayerStone;
-        boolean captures = capturesOpponent(x, y, currentPlayerStone);
-        boolean hasLiberties = hasLiberty(x, y);
-        System.out.println("Captures: " + captures + ", hasLiberties: " + hasLiberties);
-
-        board = saveBoard;
-
-        return !captures && !hasLiberties;
-    }
-    private boolean hasLiberty(int x, int y) 
-    {
-        Stone stoneColor = board[x][y];
-        boolean[][] visited = new boolean[boardSize][boardSize];
-        return checkGroupLiberties(x, y, stoneColor, visited);
-    }
-    private boolean checkGroupLiberties(int x, int y, Stone stoneColor, boolean[][] visited) {
-        if (isOutOfBoard(x, y) || visited[x][y]) {
-            return false;
-        }
-        if (board[x][y] != stoneColor && board[x][y] != Stone.EMPTY) {
-            return false;
-        }
-        if (board[x][y] == Stone.EMPTY) {
-            return true;
-        }
-        visited[x][y] = true;
-        boolean hasLiberty = false;
-        hasLiberty |= checkGroupLiberties(x + 1, y, stoneColor, visited);
-        hasLiberty |= checkGroupLiberties(x - 1, y, stoneColor, visited);
-        hasLiberty |= checkGroupLiberties(x, y + 1, stoneColor, visited);
-        hasLiberty |= checkGroupLiberties(x, y - 1, stoneColor, visited);
-    
-        return hasLiberty;
-    }
-    
-    private boolean capturesOpponent(int x, int y, Stone currentPlayerStone)
-    {
-        Stone opponentStone = (currentPlayerStone == Stone.BLACK) ? Stone.WHITE : Stone.BLACK;
-        return checkCapture(x + 1, y, opponentStone) ||
-                checkCapture(x - 1, y, opponentStone) ||
-                checkCapture(x, y + 1, opponentStone) ||
-                checkCapture(x, y - 1, opponentStone);
-    }
-    private boolean checkCapture(int x, int y, Stone opponentStone)
-    {
-        if (isOutOfBoard(x, y) || board[x][y] != opponentStone)
-        {
-            return false;
-        }
-    
-        ArrayList<Point> group = new ArrayList<>();
-        ArrayList<Point> liberties = new ArrayList<>();
-        findGroupWithLiberties(x, y, opponentStone, group, liberties);
-        if (liberties.isEmpty()) {
-            for (Point stone : group) {
-                board[stone.x][stone.y] = Stone.EMPTY;
-            }
-            return true;
-        }
-        return false;
-    }
 
     //! for debugging purposes
-    private static void printBoard(Stone[][] board) {
-        int boardSize = board.length;
-        for (int y = 0; y < boardSize; y++) {
-            for (int x = 0; x < boardSize; x++) {
-                switch (board[x][y]) {
-                    case BLACK:
-                        System.out.print("B ");
-                        break;
-                    case WHITE:
-                        System.out.print("W ");
-                        break;
-                    default:
-                        System.out.print(". ");
-                        break;
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-        System.out.println();
-    }
+    // private static void printBoard(Stone[][] board) {
+    //     int boardSize = board.length;
+    //     for (int y = 0; y < boardSize; y++) {
+    //         for (int x = 0; x < boardSize; x++) {
+    //             switch (board[x][y]) {
+    //                 case BLACK:
+    //                     System.out.print("B ");
+    //                     break;
+    //                 case WHITE:
+    //                     System.out.print("W ");
+    //                     break;
+    //                 default:
+    //                     System.out.print(". ");
+    //                     break;
+    //             }
+    //         }
+    //         System.out.println();
+    //     }
+    //     System.out.println();
+    //     System.out.println();
+    // }
     //! END for debugging purposes
-
-
-    private void initializeBoard() 
-    {
-        board = new Stone[boardSize][boardSize];
-        for (int i = 0; i < boardSize; i++)
-        {
-            for (int j = 0; j < boardSize; j++) 
-            {
-                board[i][j] = Stone.EMPTY;
-            }
-        }
-    }
-
-    private PlayerColors getPlayerColor(Stone stone) {
-        return (stone == Stone.BLACK) ? PlayerColors.BLACK : PlayerColors.WHITE;
-    }
-
-    private int[] countTerritory()
-    {
-        boolean[][] visited = new boolean[boardSize][boardSize];
-        int[] territory = new int[2];
-        for (int x = 0; x < boardSize; x++)
-        {
-            for (int y = 0; y < boardSize; y++)
-            {
-                if (!visited[x][y] && board[x][y] == Stone.EMPTY)
-                {
-                    ArrayList<Point> area = new ArrayList<>();
-                    PlayerColors owner = findTerritoryOwner(x, y, visited, area);
-                    if (owner != null)
-                    {
-                        territory[owner == PlayerColors.BLACK ? 0 : 1] += area.size();
-                    }
-                    //? unresolved territory is not counted to the score
-                }
-            }
-        }
-        return territory;
-    }
-
-    private PlayerColors findTerritoryOwner(int x, int y, boolean[][] visited, ArrayList<Point> area)
-    {
-        if (isOutOfBoard(x, y) || visited[x][y])
-        {
-            return null;
-        }
-        visited[x][y] = true;
-        if (board[x][y] != Stone.EMPTY)
-        {
-            return getPlayerColor(board[x][y]);
-        }
-        area.add(new Point(x, y));
-
-        PlayerColors ownerNorth = findTerritoryOwner(x, y + 1, visited, area);
-        PlayerColors ownerSouth = findTerritoryOwner(x, y - 1, visited, area);
-        PlayerColors ownerEast = findTerritoryOwner(x + 1, y, visited, area);
-        PlayerColors ownerWest = findTerritoryOwner(x - 1, y, visited, area);
-
-        PlayerColors determinedOwner = ownerNorth;
-        if (determinedOwner != null && ownerSouth != null && determinedOwner != ownerSouth) return null;
-        if (determinedOwner != null && ownerEast != null && determinedOwner != ownerEast) return null;
-        if (determinedOwner != null && ownerWest != null && determinedOwner != ownerWest) return null;
-
-        return determinedOwner;
-    }
-
-    private float[] calculateScore()
-    {
-        int[] territory = countTerritory();
-        float[] score = new float[2];
-        score[0] = territory[0] + capturedStones[0];
-        score[1] = territory[1] + capturedStones[1];
-        score[1] += 6.5; //? Komi
-        return score;
-    }
-
-
-
-
-    //! Getters and setters
-    
-    public Stone[][] getBoard()
-    {
-        return board;
-    }
-
-    public void setBoard(Stone[][] board)
-    {
-        this.board = board;
-    }
-
-    public void doProcessMove(int x, int y)
-    {
-        processMove(x, y);
-    }
-
-    public void setPreviousBoard(Stone[][] previousBoard)
-    {
-        this.previousBoard = previousBoard;
-    }
-
-    public Stone[][] getPreviousBoard()
-    {
-        return previousBoard;
-    }
-
-    public boolean getIsMoveValid(int x, int y)
-    {
-        return isMoveValid(x, y);
-    }
-
-    public void setWhoseTurn(PlayerColors whoseTurn) {
-        this.whoseTurn = whoseTurn;
-    }
-
-    public boolean testIsKoSituation(int x, int y) {
-        return isKoSituation(x, y);
-    }
-
-    public void setBoardSize(int boardSize) {
-        this.boardSize = boardSize;
-    }
-
-    public void testCaptureStones(int x, int y) {
-        captureStones(x, y);
-    }
-
-    public boolean testIsSuicideMove(int x, int y) {
-        return isSuicideMove(x, y);
-    }
 }
