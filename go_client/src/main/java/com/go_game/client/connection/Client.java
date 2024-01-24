@@ -224,6 +224,7 @@ public class Client implements Runnable
         int x = scanner.nextInt();
         System.out.print("Enter y coordinate: ");
         int y = scanner.nextInt();
+        scanner.nextLine();
 
         return new MoveMsg(x, y);
     }
