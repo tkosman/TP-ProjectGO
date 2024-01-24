@@ -33,10 +33,10 @@ public class GameLogicThreadTest {
         gameLogicThread = new GameLogicThread(9);
     }
 
-    // public static void main(String[] args)
-    // {
-    //     testBoardSituationFromImage();
-    // }
+    public static void main(String[] args)
+    {
+        testSuicideMoveThree();
+    }
 
     @Test
     void testBoardInitialization()
@@ -176,7 +176,7 @@ public class GameLogicThreadTest {
     }    
     
     @Test
-    public void testSuicideMove() {
+    public void testSuicideMoveOne() {
         gameLogicThread = new GameLogicThread(5);
         String boardSetup =  ".....\\"
                             + "..B..\\"
@@ -184,23 +184,37 @@ public class GameLogicThreadTest {
                             + "..B..\\"
                             + ".....\\";
         gameLogicThread.setBoard(decodeBoardString(boardSetup));
-        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
+        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
         assertTrue(gameLogicThread.testIsSuicideMove(2, 2), "Placing a stone at (2,2) should be identified as a suicide move");
     }
 
     @Test
-    public void testBoardSituationFromImage()
+    public void testSuicideMoveTwo()
     {
-        gameLogicThread = new GameLogicThread(4); // Assuming a 7x7 board based on the image
-
-        // Board setup string based on the image
+        gameLogicThread = new GameLogicThread(4);
         String boardSetup =   "....\\"
                             + ".WWW\\"
                             + "WBBB\\"
                             + "WWB.\\";
         gameLogicThread.setBoard(decodeBoardString(boardSetup));
         gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
-        assertFalse(gameLogicThread.testIsSuicideMove(3, 3), "Placing a stone at F1 (3,1) should not be identified as a suicide move");
+        assertFalse(gameLogicThread.testIsSuicideMove(3, 3), "Placing a stone at (3,1) should not be identified as a suicide move");
+    }
+
+    @Test
+    public static void testSuicideMoveThree()
+    {
+        GameLogicThread gameLogicThread = new GameLogicThread(3);
+        String boardSetup =   ".W.\\"
+                            + "W.B\\"
+                            + ".B.";
+        gameLogicThread.setBoard(decodeBoardString(boardSetup));
+        gameLogicThread.setWhoseTurn(PlayerColors.WHITE);
+        assertFalse(gameLogicThread.testIsSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
+
+        gameLogicThread.setBoard(decodeBoardString(boardSetup));
+        gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
+        assertFalse(gameLogicThread.testIsSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
     }
 
     private static Stone[][] decodeBoardString(String boardString)

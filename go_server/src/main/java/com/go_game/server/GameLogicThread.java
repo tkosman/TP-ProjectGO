@@ -173,6 +173,9 @@ public class GameLogicThread implements Runnable
                     processMove(x, y);
                     captureStones(x, y);
 
+                    // float[] scores = calculateScore();
+                    // System.out.println("Black: " + scores[0] + ", White: " + scores[1]);
+
                     //! 2 OUT ##########
                     sendBoardState();
                     
@@ -239,11 +242,11 @@ public class GameLogicThread implements Runnable
             {
                 board[stone.x][stone.y] = Stone.EMPTY;
 
-                // if (whoseTurn == PlayerColors.BLACK) {
-                //     capturedStones[0]++; // Black captures a white stone
-                // } else {
-                //     capturedStones[1]++; // White captures a black stone
-                // }
+                if (whoseTurn == PlayerColors.BLACK) {
+                    capturedStones[0]++; // Black captures a white stone
+                } else {
+                    capturedStones[1]++; // White captures a black stone
+                }
             }
         }
     }
@@ -283,7 +286,7 @@ public class GameLogicThread implements Runnable
     private boolean isGameOver() 
     {
         if (gameOver) {
-            int[] scores = calculateScore();
+            float[] scores = calculateScore();
             String resultMessage = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
             try {
                 toPlayer1.writeObject(new GameOverMsg(resultMessage, PlayerColors.BLACK));
@@ -305,9 +308,16 @@ public class GameLogicThread implements Runnable
         {
             return false;
         }
-    
-        if (isKoSituation(x, y) || isSuicideMove(x, y)) {
+
+        if (isKoSituation(x, y))
+        {
+            System.out.println("isKoSituation");
             return false;
+        }
+        else if (isSuicideMove(x, y))
+        {
+            System.out.println("isSuicideMove");
+            // return false;
         }
     
         return true;
@@ -315,6 +325,11 @@ public class GameLogicThread implements Runnable
     
     private boolean isKoSituation(int x, int y)
     {
+        if (previousBoard == null)
+        {
+            return false;
+        }
+
         Stone[][] saveBoard = copyBoard(board);
         board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
         captureStones(x, y);
@@ -361,20 +376,38 @@ public class GameLogicThread implements Runnable
         board[x][y] = currentPlayerStone;
         boolean captures = capturesOpponent(x, y, currentPlayerStone);
         boolean hasLiberties = hasLiberty(x, y);
+        System.out.println("Captures: " + captures + ", hasLiberties: " + hasLiberties);
 
         board = saveBoard;
 
         return !captures && !hasLiberties;
     }
-    private boolean hasLiberty(int x, int y) {
-        return hasEmptyNeighbor(x + 1, y) ||
-               hasEmptyNeighbor(x - 1, y) ||
-               hasEmptyNeighbor(x, y + 1) ||
-               hasEmptyNeighbor(x, y - 1);
+    private boolean hasLiberty(int x, int y) 
+    {
+        Stone stoneColor = board[x][y];
+        boolean[][] visited = new boolean[boardSize][boardSize];
+        return checkGroupLiberties(x, y, stoneColor, visited);
     }
-    private boolean hasEmptyNeighbor(int x, int y) {
-        return !isOutOfBoard(x, y) && board[x][y] == Stone.EMPTY;
+    private boolean checkGroupLiberties(int x, int y, Stone stoneColor, boolean[][] visited) {
+        if (isOutOfBoard(x, y) || visited[x][y]) {
+            return false;
+        }
+        if (board[x][y] != stoneColor && board[x][y] != Stone.EMPTY) {
+            return false;
+        }
+        if (board[x][y] == Stone.EMPTY) {
+            return true;
+        }
+        visited[x][y] = true;
+        boolean hasLiberty = false;
+        hasLiberty |= checkGroupLiberties(x + 1, y, stoneColor, visited);
+        hasLiberty |= checkGroupLiberties(x - 1, y, stoneColor, visited);
+        hasLiberty |= checkGroupLiberties(x, y + 1, stoneColor, visited);
+        hasLiberty |= checkGroupLiberties(x, y - 1, stoneColor, visited);
+    
+        return hasLiberty;
     }
+    
     private boolean capturesOpponent(int x, int y, Stone currentPlayerStone)
     {
         Stone opponentStone = (currentPlayerStone == Stone.BLACK) ? Stone.WHITE : Stone.BLACK;
@@ -397,9 +430,9 @@ public class GameLogicThread implements Runnable
             for (Point stone : group) {
                 board[stone.x][stone.y] = Stone.EMPTY;
             }
-            return true; // Stones were captured
+            return true;
         }
-        return false; // No stones were captured
+        return false;
     }
 
     //! for debugging purposes
@@ -439,84 +472,67 @@ public class GameLogicThread implements Runnable
         }
     }
 
-    private TerritoryResult checkTerritory(int x, int y, boolean[][] visited) {
-        if (isOutOfBoard(x, y) || visited[x][y]) {
-            return new TerritoryResult(null, 0);
-        }
-    
-        visited[x][y] = true;
-        if (board[x][y] != Stone.EMPTY) {
-            return new TerritoryResult(getPlayerColor(board[x][y]), 0);
-        }
-    
-        TerritoryResult result = new TerritoryResult(null, 1);
-        TerritoryResult[] adjacentResults = {
-            checkTerritory(x + 1, y, visited),
-            checkTerritory(x - 1, y, visited),
-            checkTerritory(x, y + 1, visited),
-            checkTerritory(x, y - 1, visited)
-        };
-    
-        for (TerritoryResult adjacentResult : adjacentResults) {
-            if (adjacentResult.owner != null) {
-                if (result.owner == null) {
-                    result.owner = adjacentResult.owner;
-                } else if (result.owner != adjacentResult.owner) {
-                    result.owner = null;
-                    break;
-                }
-            }
-            result.size += adjacentResult.size;
-        }
-    
-        return result;
-    }
-
     private PlayerColors getPlayerColor(Stone stone) {
         return (stone == Stone.BLACK) ? PlayerColors.BLACK : PlayerColors.WHITE;
     }
-    
-    //TODO: to be refactored
-    private class TerritoryResult 
+
+    private int[] countTerritory()
     {
-        PlayerColors owner;
-        int size;
-    
-        TerritoryResult(PlayerColors owner, int size) {
-            this.owner = owner;
-            this.size = size;
-        }
-    }
-    
-    private int[] calculateTerritory() {
         boolean[][] visited = new boolean[boardSize][boardSize];
-        int blackTerritory = 0;
-        int whiteTerritory = 0;
-    
-        for (int x = 0; x < boardSize; x++) {
-            for (int y = 0; y < boardSize; y++) {
-                if (board[x][y] == Stone.EMPTY && !visited[x][y]) {
-                    TerritoryResult result = checkTerritory(x, y, visited);
-                    if (result.owner == PlayerColors.BLACK) {
-                        blackTerritory += result.size;
-                    } else if (result.owner == PlayerColors.WHITE) {
-                        whiteTerritory += result.size;
+        int[] territory = new int[2];
+        for (int x = 0; x < boardSize; x++)
+        {
+            for (int y = 0; y < boardSize; y++)
+            {
+                if (!visited[x][y] && board[x][y] == Stone.EMPTY)
+                {
+                    ArrayList<Point> area = new ArrayList<>();
+                    PlayerColors owner = findTerritoryOwner(x, y, visited, area);
+                    if (owner != null)
+                    {
+                        territory[owner == PlayerColors.BLACK ? 0 : 1] += area.size();
                     }
+                    //? unresolved territory is not counted to the score
                 }
             }
         }
-        return new int[] {blackTerritory, whiteTerritory};
+        return territory;
     }
 
-    private int[] calculateScore() {
-        int[] territoryScores = calculateTerritory();
-        int blackScore = territoryScores[0]; // Black's territory
-        int whiteScore = territoryScores[1]; // White's territory
+    private PlayerColors findTerritoryOwner(int x, int y, boolean[][] visited, ArrayList<Point> area)
+    {
+        if (isOutOfBoard(x, y) || visited[x][y])
+        {
+            return null;
+        }
+        visited[x][y] = true;
+        if (board[x][y] != Stone.EMPTY)
+        {
+            return getPlayerColor(board[x][y]);
+        }
+        area.add(new Point(x, y));
 
-        blackScore += capturedStones[PlayerColors.BLACK.ordinal()];
-        whiteScore += capturedStones[PlayerColors.WHITE.ordinal()];
-    
-        return new int[] {blackScore, whiteScore};
+        PlayerColors ownerNorth = findTerritoryOwner(x, y + 1, visited, area);
+        PlayerColors ownerSouth = findTerritoryOwner(x, y - 1, visited, area);
+        PlayerColors ownerEast = findTerritoryOwner(x + 1, y, visited, area);
+        PlayerColors ownerWest = findTerritoryOwner(x - 1, y, visited, area);
+
+        PlayerColors determinedOwner = ownerNorth;
+        if (determinedOwner != null && ownerSouth != null && determinedOwner != ownerSouth) return null;
+        if (determinedOwner != null && ownerEast != null && determinedOwner != ownerEast) return null;
+        if (determinedOwner != null && ownerWest != null && determinedOwner != ownerWest) return null;
+
+        return determinedOwner;
+    }
+
+    private float[] calculateScore()
+    {
+        int[] territory = countTerritory();
+        float[] score = new float[2];
+        score[0] = territory[0] + capturedStones[0];
+        score[1] = territory[1] + capturedStones[1];
+        score[1] += 6.5; //? Komi
+        return score;
     }
 
 
