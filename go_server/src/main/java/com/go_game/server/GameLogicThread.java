@@ -173,8 +173,8 @@ public class GameLogicThread implements Runnable
                     processMove(x, y);
                     captureStones(x, y);
 
-                    // float[] scores = calculateScore();
-                    // System.out.println("Black: " + scores[0] + ", White: " + scores[1]);
+                    float[] scores = calculateScore();
+                    System.out.println("Black: " + scores[0] + ", White: " + scores[1]);
 
                     //! 2 OUT ##########
                     sendBoardState();
@@ -317,7 +317,7 @@ public class GameLogicThread implements Runnable
         else if (isSuicideMove(x, y))
         {
             System.out.println("isSuicideMove");
-            // return false;
+            return false;
         }
     
         return true;
