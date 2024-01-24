@@ -7,8 +7,6 @@ import java.net.Socket;
 import java.sql.Timestamp;
 import java.util.Scanner;
 
-import com.go_game.client.game_model.Player;
-
 import shared.enums.BoardSize;
 import shared.enums.GameMode;
 import shared.enums.MessageType;

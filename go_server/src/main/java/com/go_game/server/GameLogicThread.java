@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import shared.enums.BoardSize;
 import shared.enums.PlayerColors;
@@ -29,14 +30,22 @@ public class GameLogicThread implements Runnable
     private static int gameID = 0;
     private int boardSize;
     private Stone[][] board;
-    private Stone[][] previousBoard = new Stone[9][9]; //TODO: change size
-    // private boolean isPlayer1Turn = true;
+    private Stone[][] previousBoard;
     private PlayerColors whoseTurn = PlayerColors.BLACK;
     private boolean previousWasPass = false;
     private int[] capturedStones = new int[2]; // Index 0 for Black, 1 for White
     private boolean gameOver = false;
 
     //! I assume that player 1 is always black and player 2 is always white
+
+
+    //? constructor for tests
+    public GameLogicThread(int boardSize)
+    {
+        this.boardSize = boardSize;
+        initializeBoard();
+        gameID++;
+    }
 
     //TODO: pass socket to close it later
     public GameLogicThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
@@ -89,7 +98,7 @@ public class GameLogicThread implements Runnable
                 System.out.println("TURN: " + whoseTurn);
 
                 MoveMsg moveMsg;
-                if (!whoseTurn.equals(PlayerColors.WHITE))
+                if (!whoseTurn.equals(PlayerColors.WHITE)) 
                 {
                     //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " Player BLACK playing"); //! for debugging purposes
@@ -162,7 +171,7 @@ public class GameLogicThread implements Runnable
                 else
                 {
                     processMove(x, y);
-                    checkForCapturedStones(x, y);
+                    captureStones(x, y);
 
                     //! 2 OUT ##########
                     sendBoardState();
@@ -195,16 +204,15 @@ public class GameLogicThread implements Runnable
 
     private void processMove(int x, int y)
     {
-        copyBoardState(board, previousBoard); //? for KO situation
-
         board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        previousBoard = copyBoard(board);
     }
 
     //? this method will be called after each move. It will check for captured stones and remove them from the board
-    private void checkForCapturedStones(int x, int y)
+    private void captureStones(int x, int y)
     {
         Stone playerStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-        Stone opponentStone = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
+        Stone opponentStone = (whoseTurn == PlayerColors.BLACK) ? Stone.WHITE : Stone.BLACK;
 
         //? we need to check the 4 directions around the stone
         captureGroupIfSurrounded(x + 1, y, opponentStone);
@@ -231,11 +239,11 @@ public class GameLogicThread implements Runnable
             {
                 board[stone.x][stone.y] = Stone.EMPTY;
 
-                if (whoseTurn == PlayerColors.BLACK) {
-                    capturedStones[0]++; // Black captures a white stone
-                } else {
-                    capturedStones[1]++; // White captures a black stone
-                }
+                // if (whoseTurn == PlayerColors.BLACK) {
+                //     capturedStones[0]++; // Black captures a white stone
+                // } else {
+                //     capturedStones[1]++; // White captures a black stone
+                // }
             }
         }
     }
@@ -307,15 +315,16 @@ public class GameLogicThread implements Runnable
     
     private boolean isKoSituation(int x, int y)
     {
-        Stone originalState = board[x][y];
-
+        Stone[][] saveBoard = copyBoard(board);
         board[x][y] = (whoseTurn == PlayerColors.BLACK) ? Stone.BLACK : Stone.WHITE;
-
+        captureStones(x, y);
         boolean isKo = isBoardStateEqual(previousBoard, board);
-
-        board[x][y] = originalState;
-
-        return isKo;
+        if(!isKo)
+        {
+            board = saveBoard;
+            return false;
+        }
+        return true;
     }
 
     private boolean isBoardStateEqual(Stone[][] board1, Stone[][] board2)
@@ -330,13 +339,14 @@ public class GameLogicThread implements Runnable
         return true;
     }
 
-    private void copyBoardState(Stone[][] source, Stone[][] destination) 
+    private Stone[][] copyBoard(Stone[][] source)
     {
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                destination[i][j] = source[i][j];
-            }
+        Stone[][] destination = new Stone[source.length][];
+        for (int i = 0; i < source.length; i++)
+        {
+            destination[i] = Arrays.copyOf(source[i], source[i].length);
         }
+        return destination;
     }
     
     private boolean isSuicideMove(int x, int y) {
@@ -403,7 +413,8 @@ public class GameLogicThread implements Runnable
     
 
     //! for debugging purposes
-    private void printBoard() {
+    private static void printBoard(Stone[][] board) {
+        int boardSize = board.length;
         for (int y = 0; y < boardSize; y++) {
             for (int x = 0; x < boardSize; x++) {
                 switch (board[x][y]) {
@@ -517,5 +528,55 @@ public class GameLogicThread implements Runnable
     
         return new int[] {blackScore, whiteScore};
     }
+
+
+
+
+    //! Getters and setters
     
+    public Stone[][] getBoard()
+    {
+        return board;
+    }
+
+    public void setBoard(Stone[][] board)
+    {
+        this.board = board;
+    }
+
+    public void doProcessMove(int x, int y)
+    {
+        processMove(x, y);
+    }
+
+    public void setPreviousBoard(Stone[][] previousBoard)
+    {
+        this.previousBoard = previousBoard;
+    }
+
+    public Stone[][] getPreviousBoard()
+    {
+        return previousBoard;
+    }
+
+    public boolean getIsMoveValid(int x, int y)
+    {
+        return isMoveValid(x, y);
+    }
+
+    public void setWhoseTurn(PlayerColors whoseTurn) {
+        this.whoseTurn = whoseTurn;
+    }
+
+    public boolean testIsKoSituation(int x, int y) {
+        return isKoSituation(x, y);
+    }
+
+    public void setBoardSize(int boardSize) {
+        this.boardSize = boardSize;
+    }
+
+    public void testCaptureStones(int x, int y) {
+        captureStones(x, y);
+    }
 }
