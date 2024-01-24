@@ -21,7 +21,7 @@ import shared.messages.PlayerPassedMsg;
 
 
 //? This class will be responsible for game logic and will be an individual thread for each game session
-public class GameLogicThread implements Runnable
+public class MultiplayerGameThread implements Runnable
 {
     private ObjectOutputStream toPlayer1;
     private ObjectInputStream fromPlayer1;
@@ -40,7 +40,7 @@ public class GameLogicThread implements Runnable
 
 
     //? constructor for tests
-    public GameLogicThread(int boardSize)
+    public MultiplayerGameThread(int boardSize)
     {
         this.boardSize = boardSize;
         initializeBoard();
@@ -48,7 +48,7 @@ public class GameLogicThread implements Runnable
     }
 
     //TODO: pass socket to close it later
-    public GameLogicThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
+    public MultiplayerGameThread(ObjectOutputStream toPlayer1, ObjectInputStream fromPlayer1, ObjectOutputStream toPlayer2, 
                             ObjectInputStream fromPlayer2, BoardSize enumBoardSize) throws IOException
     {
         this.toPlayer1 = toPlayer1;

@@ -1,5 +1,5 @@
 package com.go_game.server;
 
-public class BoardSize {
-
+public class GameLogic {
+    
 }

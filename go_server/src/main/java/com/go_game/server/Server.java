@@ -103,7 +103,7 @@ public class Server
                             }
                             else
                             {
-                                new GameLogicThread(toClient, fromClient, toWaitingPlayer9x9, fromWaitingPlayer9x9, boardSize);
+                                new MultiplayerGameThread(toClient, fromClient, toWaitingPlayer9x9, fromWaitingPlayer9x9, boardSize);
                                 waitingPlayer9x9 = null;
                                 fromWaitingPlayer9x9 = null;
                                 toWaitingPlayer9x9 = null;

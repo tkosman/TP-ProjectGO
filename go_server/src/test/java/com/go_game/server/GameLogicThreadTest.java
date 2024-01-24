@@ -25,12 +25,12 @@ import shared.messages.OkMsg;
 import shared.messages.PlayerPassedMsg;
 
 public class GameLogicThreadTest {
-    private GameLogicThread gameLogicThread;
+    private MultiplayerGameThread gameLogicThread;
 
     @BeforeEach
     void setUp() throws IOException
     {
-        gameLogicThread = new GameLogicThread(9);
+        gameLogicThread = new MultiplayerGameThread(9);
     }
 
     public static void main(String[] args)
@@ -81,7 +81,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureSingleStone() 
     {
-        GameLogicThread gameLogicThread = new GameLogicThread(3);
+        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(3);
         gameLogicThread.setBoard(decodeBoardString(".B.\\BWB\\.B."));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(2, 1);
@@ -91,7 +91,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureSingleStoneDifferentScenario()
     {
-        GameLogicThread gameLogicThread = new GameLogicThread(5);
+        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(5);
         gameLogicThread.setBoard(decodeBoardString(".....\\..B\\.BWB\\..B\\....."));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(2, 1);
@@ -101,7 +101,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureMultipleStones() 
     {
-        GameLogicThread gameLogicThread = new GameLogicThread(5);
+        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(5);
         gameLogicThread.setBoard(decodeBoardString(".BB..\\BWWB.\\BWWB.\\BWWB.\\.BB..\\"));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(2, 0);
@@ -119,7 +119,7 @@ public class GameLogicThreadTest {
     @Test
     public void testCaptureMultipleStonesDifferentScenario()
     {
-        GameLogicThread gameLogicThread = new GameLogicThread(5);
+        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(5);
         gameLogicThread.setBoard(decodeBoardString(".....\\.BBB.\\BWWB.\\BWWB.\\.BB..\\"));
         gameLogicThread.setWhoseTurn(PlayerColors.BLACK);
         gameLogicThread.testCaptureStones(3, 3);
@@ -135,7 +135,7 @@ public class GameLogicThreadTest {
     @Test
     public void testIsKoSituationOne()
     {
-        gameLogicThread = new GameLogicThread(4);
+        gameLogicThread = new MultiplayerGameThread(4);
         String boardSetup =  ".BW.\\"
                             + "B.BW\\"
                             + ".BW.\\"
@@ -155,7 +155,7 @@ public class GameLogicThreadTest {
 
     @Test
     public void testIsKoSituationTwo() {
-        gameLogicThread = new GameLogicThread(5);
+        gameLogicThread = new MultiplayerGameThread(5);
         String previousBoardSetup =  ".....\\"
                                     + "..B..\\"
                                     + ".BWB.\\"
@@ -177,7 +177,7 @@ public class GameLogicThreadTest {
     
     @Test
     public void testSuicideMoveOne() {
-        gameLogicThread = new GameLogicThread(5);
+        gameLogicThread = new MultiplayerGameThread(5);
         String boardSetup =  ".....\\"
                             + "..B..\\"
                             + ".B.B.\\"
@@ -191,7 +191,7 @@ public class GameLogicThreadTest {
     @Test
     public void testSuicideMoveTwo()
     {
-        gameLogicThread = new GameLogicThread(4);
+        gameLogicThread = new MultiplayerGameThread(4);
         String boardSetup =   "....\\"
                             + ".WWW\\"
                             + "WBBB\\"
@@ -204,7 +204,7 @@ public class GameLogicThreadTest {
     @Test
     public static void testSuicideMoveThree()
     {
-        GameLogicThread gameLogicThread = new GameLogicThread(3);
+        MultiplayerGameThread gameLogicThread = new MultiplayerGameThread(3);
         String boardSetup =   ".W.\\"
                             + "W.B\\"
                             + ".B.";
