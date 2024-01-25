@@ -15,13 +15,8 @@ public class Server
     private static final int PORT = 4444;
     private static int player_index = 1;
     
-
     ClientConnection clientConnection;
     ClientConnection waitingPlayer9x9Connection;
-
-    // private static Socket waitingPlayer9x9 = null;
-    // private static ObjectInputStream fromWaitingPlayer9x9;
-    // private static ObjectOutputStream toWaitingPlayer9x9;
 
     public static void main(String[] args)
     {

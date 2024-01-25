@@ -24,6 +24,13 @@ public class ClientConnection
         this.outputStream = outputStream;
         this.inputStream = inputStream;
     }
+
+    public void closeConnection() throws IOException
+    {
+        socket.close();
+        outputStream.close();
+        inputStream.close();
+    }
     
     public void sendMessage(Object message) throws IOException
     {

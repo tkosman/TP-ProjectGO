@@ -143,14 +143,10 @@ public class Client implements Runnable
         {
             //? Player did an invalid move
             //? we need to resent the move
-            if (playerNo == ((MoveNotValidMsg)message).playerWhoDidNotValidMove())
-            {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE INVALID BY #" + playerNo  + " TURN: " + whoseTurn);
-            }
-            else
-            {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE INVALID BY #" + playerNo  + " TURN: " + whoseTurn);
-            }
+            MoveNotValidMsg moveNotValidMsg = (MoveNotValidMsg) message;
+            PlayerColors playerWhoDidNotValidMove = moveNotValidMsg.playerWhoDidNotValidMove();
+            String description = moveNotValidMsg.getDescription();
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID " + playerWhoDidNotValidMove + " " + description);
 
         }
         else if (message.getType() == MessageType.PLAYER_PASSED)
@@ -169,8 +165,8 @@ public class Client implements Runnable
             //? we need to print the winner and the reason
             GameOverMsg gameOverMsg = (GameOverMsg) message;
             PlayerColors winner = gameOverMsg.getWinner();
-            String reason = gameOverMsg.getReasonOrResult();
-            System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + reason);
+            String description = gameOverMsg.getdescription();
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + description);
             System.exit(0);
         }
         else

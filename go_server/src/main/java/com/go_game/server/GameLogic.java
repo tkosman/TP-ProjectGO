@@ -157,7 +157,6 @@ public class GameLogic
         board[x][y] = currentPlayerStone;
         boolean captures = capturesOpponent(x, y, currentPlayerStone);
         boolean hasLiberties = hasLiberty(x, y);
-        System.out.println("Captures: " + captures + ", hasLiberties: " + hasLiberties);
 
         board = saveBoard;
 

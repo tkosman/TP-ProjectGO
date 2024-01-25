@@ -2,6 +2,7 @@ package com.go_game.server;
 
 import java.io.IOException;
 import shared.enums.PlayerColors;
+import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
 import shared.messages.GameOverMsg;
@@ -13,7 +14,19 @@ import shared.other.Logger;
 
 
 
-//? This class will be responsible for game logic and will be an individual thread for each game session
+/**
+ * Represents a thread that handles a multiplayer game session between two players.
+ * This class implements the Runnable interface and is designed to be run in a separate thread.
+ * It manages communication between the players.
+ * 
+ * Used messages:
+ * - GameJoinedMsg()    - sent to both players when the game starts
+ * - MoveNotValidMsg()  - sent to both players when a move is not valid
+ * - PlayerPassedMsg()  - sent to both players when a player passes
+ * - BoardStateMsg()    - sent to both players when a valid move is made
+ * - GameOverMsg()      - sent to both players when the game is over
+ * 
+ */
 public class MultiplayerGameThread implements Runnable
 {
     private static int gameID = 0;
@@ -26,8 +39,6 @@ public class MultiplayerGameThread implements Runnable
 
     private Logger logger = new Logger();
 
-    //TODO: Change assumption that player 1 is always black and player 2 is always white
-
     public MultiplayerGameThread(ClientConnection player1Connection, ClientConnection player2Connection, int boardSize) throws IOException
     {
 
@@ -37,12 +48,10 @@ public class MultiplayerGameThread implements Runnable
         gameLogic = new GameLogic(boardSize);
         gameID++;
 
-        //! 4 OUT
         player1Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
         player2Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.WHITE, gameLogic.getWhoseTurn()));
 
 
-        //! HANDSHAKE FINISHED
         Thread fred = new Thread(this);
         fred.start();
 
@@ -56,153 +65,130 @@ public class MultiplayerGameThread implements Runnable
         {
             while(!isGameOver())
             {
-                System.out.println("\n\n####################### GAME " + gameID + " #######################");
-                System.out.println("TURN: " + gameLogic.getWhoseTurn());
-
-                MoveMsg moveMsg;
-                if (!gameLogic.getWhoseTurn().equals(PlayerColors.WHITE)) 
-                {
-                    //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
-                    logger.log("Player BLACK playing"); //! for debugging purposes
-                    moveMsg = (MoveMsg) player1Connection.receiveMessage();
-                    logger.say(moveMsg); //! for debugging purposes
-                    OkMsg okMsg = (OkMsg) player2Connection.receiveMessage();
-                }
-                else
-                {
-                    //! 1 IN +++++++++ -> Player 2 playing and player 1 sending OK
-                    logger.log("Player WHITE playing"); //! for debugging purposes
-                    moveMsg = (MoveMsg) player2Connection.receiveMessage();
-                    OkMsg okMsg = (OkMsg) player1Connection.receiveMessage();
-                }
-
+                logGameState();
+                MoveMsg moveMsg = receiveMove();
                 if (moveMsg.playerPassed())
                 {
-                    logger.log("PLAYER PASSED\n"); //! for debugging purposes
+                    //? player PASSED
                     if (previousWasPass)
                     {
-                        //! 2 OUT ##########
-                        logger.log(" GAME OVER\n"); //! for debugging purposes
-
+                        //? both players passed -> game over
                         gameOver = true;
-
                         continue;
                     }
                     else
                     {
+                        //? only one player passed -> switch turns
                         previousWasPass = true;
-                        player1Connection.sendMessage(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
-                        player2Connection.sendMessage(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
+                        sendMessageToBothPlayers(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
                         switchTurns();
                         continue;
                     }
                 }
                 else
                 {
+                    //? player DID NOT PASS
                     previousWasPass = false;
                 }
 
                 int x = moveMsg.getX();
                 int y = moveMsg.getY();
-
-                if (!isMoveValid(x, y))
+                if(isMoveValid(x, y))
                 {
-                    //? move is INVALID
-                    //? sending info to player that the move is INVALID he needs to repeat it
-                    if (gameLogic.getWhoseTurn().equals(PlayerColors.BLACK))
-                    {   
-                        //! 2 OUT ##########
-                        logger.log("INVALID MOVE BY PLAYER 1\n"); //! for debugging purposes
-                        player1Connection.sendMessage(new MoveNotValidMsg(1));
-                        player2Connection.sendMessage(new MoveNotValidMsg(1));
-                        
-                    }
-                    else 
-                    {
-                        //! 2 OUT ##########
-                        logger.log(" INVALID MOVE BY PLAYER 2\n"); //! for debugging purposes
-                        player1Connection.sendMessage(new MoveNotValidMsg(2));
-                        player2Connection.sendMessage(new MoveNotValidMsg(2));
-                    }
+                    //? move is VALID
+                    gameLogic.processMove(x, y);
+                    gameLogic.captureStones(x, y);
+                    float[] scores = gameLogic.calculateScore();
+                    logger.say("Black: " + scores[0] + ", White: " + scores[1]);
+                    sendMessageToBothPlayers(new BoardStateMsg(gameLogic.getBoard()));
+                    switchTurns();
                 }
                 else
                 {
-                    gameLogic.processMove(x, y);
-                    gameLogic.captureStones(x, y);
-
-                    float[] scores = gameLogic.calculateScore();
-                    logger.say("Black: " + scores[0] + ", White: " + scores[1]);
-
-                    //! 2 OUT ##########
-                    sendBoardState();
-                    
-                    Thread.sleep(1000); //! for debugging purposes
-                    switchTurns();
+                    //? move is INVALID
+                    //? info is already sent to players
+                    continue;
                 }
 
             }
         }
         //TODO: handle this exception correctly
-        catch (InterruptedException | IOException | ClassNotFoundException e)
+        catch (IOException | ClassNotFoundException e)
         {
-            e.printStackTrace();
+            System.out.println("Error in MultiplayerGameThread: " + e.getMessage());
         }
     }
 
-    private void sendBoardState() throws IOException
+    private MoveMsg receiveMove() throws ClassNotFoundException, IOException
     {
-        BoardStateMsg boardStateMsg = new BoardStateMsg(gameLogic.getBoard());
-
-        //! 2 ########## OUT -> Sending board state to players
-        logger.log("SENDING BOARD STATE TO PLAYER 1"); //! for debugging purposes
-        player1Connection.sendMessage(boardStateMsg);
-        logger.log("SENDING BOARD STATE TO PLAYER 2 "); //! for debugging purposes
-        player2Connection.sendMessage(boardStateMsg);
+        MoveMsg moveMsg;
+        if (!gameLogic.getWhoseTurn().equals(PlayerColors.WHITE)) 
+        {
+            logger.log("Player BLACK playing");
+            moveMsg = (MoveMsg) player1Connection.receiveMessage();
+            OkMsg okMsg = (OkMsg) player2Connection.receiveMessage();
+        }
+        else
+        {
+            logger.log("Player WHITE playing");
+            moveMsg = (MoveMsg) player2Connection.receiveMessage();
+            OkMsg okMsg = (OkMsg) player1Connection.receiveMessage();
+        }
+        return moveMsg;
     }
 
+    private void sendMessageToBothPlayers(AbstractMessage message) throws IOException
+    {
+        logger.log("Sending message to both players: " + message.getType());
+        player1Connection.sendMessage(message);
+        player2Connection.sendMessage(message);
+    }
     
-    private boolean isMoveValid(int x, int y)
+    private boolean isMoveValid(int x, int y) throws IOException
     {
         
         //? check for basic board bounds and empty space
         if (!gameLogic.isInBoundsAndEmptySpace(x, y))
         {
+            sendMessageToBothPlayers(new MoveNotValidMsg(gameLogic.getWhoseTurn(), "Move not in bounds or not empty space!"));
             return false;
         }
 
         else if (gameLogic.isKoSituation(x, y))
         {
-            System.out.println("isKoSituation");
+            sendMessageToBothPlayers(new MoveNotValidMsg(gameLogic.getWhoseTurn(), "Ko situation!"));
             return false;
         }
         else if (gameLogic.isSuicideMove(x, y))
         {
-            System.out.println("isSuicideMove");
+            sendMessageToBothPlayers(new MoveNotValidMsg(gameLogic.getWhoseTurn(), "Suicide move!"));
             return false;
         }
     
         return true;
     }
 
-    private void switchTurns()
+    private boolean isGameOver() throws IOException
     {
-        gameLogic.setWhoseTurn(gameLogic.getWhoseTurn().toggle());
-    }
-
-    private boolean isGameOver() 
-    {
-        if (gameOver) {
+        if (gameOver)
+        {
             float[] scores = gameLogic.calculateScore();
-            String resultMessage = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
-            try {
-                player1Connection.sendMessage(new GameOverMsg(resultMessage, PlayerColors.BLACK));
-                player2Connection.sendMessage(new GameOverMsg(resultMessage, PlayerColors.WHITE));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String description = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
+            PlayerColors winner = (scores[0] > scores[1]) ? PlayerColors.BLACK : PlayerColors.WHITE;
+            sendMessageToBothPlayers(new GameOverMsg(description, winner, scores));
             return true;
         }
         return false;
+    }
+
+    private void logGameState()
+    {
+        logger.say("\n\n####################### GAME " + gameID + " #######################" + "\n" + "TURN: " + gameLogic.getWhoseTurn());
+    }
+
+    private void switchTurns()
+    {
+        gameLogic.setWhoseTurn(gameLogic.getWhoseTurn().toggle());
     }
 
     //! for debugging purposes
