@@ -58,6 +58,11 @@ Axis {
     -fx-background-color: #2E2E2E;
 }
 
+.border-pane {
+    -fx-background-color: #2E2E2E;
+    -fx-fill: #2E2E2E;
+}
+
 .fade-background {
     -fx-background-color: #212121;
 }
@@ -69,4 +74,8 @@ Axis {
 #mainHBox {
     -fx-background-color: #2b2b2b;
     -fx-padding: 5;
+}
+
+.list-cell:filled:hover {
+    -fx-text-fill: #af00ff;
 }
