@@ -67,7 +67,7 @@ public class GameController {
     private Button resignButton;
 
     @FXML
-    private void initialize() {
+    void initialize() {
         assert boardAnchorPane != null : "fx:id=\"boardAnchorPane\" was not injected: check your FXML file 'game.fxml'.";
         assert boardHBox != null : "fx:id=\"boardHBox\" was not injected: check your FXML file 'game.fxml'.";
         assert controllsVBox != null : "fx:id=\"controllsVBox\" was not injected: check your FXML file 'game.fxml'.";
@@ -134,11 +134,6 @@ public class GameController {
                 ((VBox) boardHBox.getChildren().get(i)).getChildren().add(circle);
             }
         }
-
-        Platform.runLater(() -> {
-            AnchorPane.setTopAnchor(boardHBox, (circleRadius + spacing) * (gridSize / 2 - 3.0));
-            AnchorPane.setLeftAnchor(boardHBox, (circleRadius + spacing) * (gridSize / 2 - 3.0));
-        });
     }
 
     private ColorEnum currentPlayerColor = ColorEnum.BLACK;

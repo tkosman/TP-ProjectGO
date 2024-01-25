@@ -109,17 +109,11 @@ public class MenuController {
 
     @FXML
     void showReplays() {
-        // TODO: fetch replays from server
-
-        //! for testing
-        List<List<String>> sampleList = Arrays.asList(
-                Arrays.asList("John", "Doe", "30"),
-                Arrays.asList("Jane", "Smith", "25"),
-                Arrays.asList("Bob", "Johnson", "40")
-        );
-
-        replayAlert(sampleList);
-
+        try {
+            App.setRoot("replay");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     
@@ -128,37 +122,6 @@ public class MenuController {
 
         gameModeAlert(x);
 
-    }
-
-    private void replayAlert(List<List<String>> replayList) {
-        Alert alert = new Alert(Alert.AlertType.NONE, "", ButtonType.CLOSE);
-        alert.initStyle(StageStyle.UNDECORATED);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
-        alert.getDialogPane().setPrefSize(300, 300);
-
-        ListView<String> listView = new ListView<>();
-        ObservableList<String> items = FXCollections.observableArrayList();
-
-        for (List<String> entry : replayList) {
-            items.add(String.join("  |  ", entry));
-        }
-
-        listView.setItems(items);
-
-        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                try {
-                    App.setRoot("replay");
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        VBox vBox = new VBox(listView);
-        alert.getDialogPane().setContent(vBox);
-
-        alert.showAndWait();
     }
 
 
