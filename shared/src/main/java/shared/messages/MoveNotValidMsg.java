@@ -1,29 +1,36 @@
 package shared.messages;
 
 import shared.enums.MessageType;
+import shared.enums.PlayerColors;
 
 public class MoveNotValidMsg extends AbstractMessage
 {
-    //TODO: change it to enum PlayerColors
-    private int playerWhoDidNotValidMove;
+    private PlayerColors playerWhoDidNotValidMove;
+    private String description;
 
-    public MoveNotValidMsg(int playerWhoDidNotValidMove)
+    public MoveNotValidMsg(PlayerColors playerWhoDidNotValidMove, String description)
     {
         type = MessageType.MOVE_NOT_VALID;
         this.playerWhoDidNotValidMove = playerWhoDidNotValidMove;
+        this.description = description;
     }
 
-    public int playerWhoDidNotValidMove()
+    public PlayerColors playerWhoDidNotValidMove()
     {
         return playerWhoDidNotValidMove;
+    }
+
+    public String getDescription()
+    {
+        return description;
     }
 
     @Override
     public String toString()
     {
         return "MoveNotValidMsg{" +
-                " MOVE INVALID -> " +
-                "player1didNotValidMove=" + playerWhoDidNotValidMove +
+                "playerWhoDidNotValidMove=" + playerWhoDidNotValidMove +
+                ", description='" + description + '\'' +
                 '}';
     }
 }

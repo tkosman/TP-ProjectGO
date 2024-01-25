@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Timestamp;
+import java.util.Scanner;
 
 import shared.enums.BoardSize;
 import shared.enums.GameMode;
@@ -15,10 +16,12 @@ import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
 import shared.messages.ClientInfoMsg;
 import shared.messages.GameJoinedMsg;
+import shared.messages.GameOverMsg;
 import shared.messages.IndexSetMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
+import shared.messages.PlayerPassedMsg;
 
 
 public class Client implements Runnable
@@ -34,12 +37,14 @@ public class Client implements Runnable
     private PlayerColors playerColor;
     private int gameID;
     private PlayerColors whoseTurn = PlayerColors.BLACK;
+    private static Scanner scanner; //! for debugging purposes
 
     private Stone[][] board; //! for debugging purposes
 
 
     public static void main(String[] args) throws ClassNotFoundException
     {
+        scanner = new Scanner(System.in);
         new Client();
     }
 
@@ -138,15 +143,31 @@ public class Client implements Runnable
         {
             //? Player did an invalid move
             //? we need to resent the move
-            if (playerNo == ((MoveNotValidMsg)message).playerWhoDidNotValidMove())
-            {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE INVALID BY #" + playerNo  + " TURN: " + whoseTurn);
-            }
-            else
-            {
-                System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE INVALID BY #" + playerNo  + " TURN: " + whoseTurn);
-            }
+            MoveNotValidMsg moveNotValidMsg = (MoveNotValidMsg) message;
+            PlayerColors playerWhoDidNotValidMove = moveNotValidMsg.playerWhoDidNotValidMove();
+            String description = moveNotValidMsg.getDescription();
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID " + playerWhoDidNotValidMove + " " + description);
 
+        }
+        else if (message.getType() == MessageType.PLAYER_PASSED)
+        {
+            //? Player passed
+            //? we need to print who passed
+            PlayerPassedMsg playerPassedMsg = (PlayerPassedMsg) message;
+            PlayerColors playerColor = playerPassedMsg.getPlayerColor();
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " PLAYER PASSED " + playerColor);
+            switchTurns();
+        }
+
+        else if (message.getType() == MessageType.GAME_OVER)
+        {
+            //? Game over
+            //? we need to print the winner and the reason
+            GameOverMsg gameOverMsg = (GameOverMsg) message;
+            PlayerColors winner = gameOverMsg.getWinner();
+            String description = gameOverMsg.getdescription();
+            System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + description);
+            System.exit(0);
         }
         else
         {
@@ -188,9 +209,17 @@ public class Client implements Runnable
     private MoveMsg getPlayerMove() {
         //TODO: !DOBREK! here you should get the move from the player return it as a MoveMsg
 
-        //Placeholder
-        int x = (int) (Math.random() * 9);
-        int y = (int) (Math.random() * 9);
+        System.out.println("Do you want to pass? (y/n)");
+        String pass = scanner.nextLine();
+        if (pass.equals("y")) {
+            return new MoveMsg(true);
+        }
+        System.out.print("Enter x coordinate: ");
+        int x = scanner.nextInt();
+        System.out.print("Enter y coordinate: ");
+        int y = scanner.nextInt();
+        scanner.nextLine();
+
         return new MoveMsg(x, y);
     }
 
