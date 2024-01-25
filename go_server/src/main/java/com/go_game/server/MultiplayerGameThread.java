@@ -60,8 +60,9 @@ public class MultiplayerGameThread implements Runnable
         Thread fred = new Thread(this);
         fred.start();
 
-        player1Connection.getSocket().close();
-        player2Connection.getSocket().close();
+        //TODO: close sockets
+        // player1Connection.getSocket().close();
+        // player2Connection.getSocket().close();
     }
 
     /**
