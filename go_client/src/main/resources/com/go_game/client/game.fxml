@@ -8,8 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
-<HBox fx:id="mainHBox" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.GameController">
+<HBox fx:id="mainHBox" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@darkTheme.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.GameController">
    <children>
       <AnchorPane fx:id="boardAnchorPane" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
          <children>
@@ -20,7 +19,7 @@
          <children>
             <HBox alignment="TOP_RIGHT" prefWidth="200.0">
                <children>
-                  <Button fx:id="exitButton" mnemonicParsing="false" onAction="#exit" text="exit" textAlignment="CENTER" />
+                  <Button fx:id="exitButton" mnemonicParsing="false" onAction="#exit" prefWidth="55.0" text="exit" textAlignment="CENTER" />
                </children>
                <opaqueInsets>
                   <Insets />
@@ -31,11 +30,7 @@
             </HBox>
             <VBox alignment="TOP_RIGHT" prefWidth="100.0">
                <children>
-                  <Label fx:id="oponentNameLabel" text="&lt;oponent&gt;">
-                     <graphic>
-                        <Label fx:id="oponentEloLabel" text="&lt;elo&gt;" />
-                     </graphic>
-                  </Label>
+                  <Label fx:id="oponentNameLabel" text="Oponent" />
                   <Label fx:id="oponentScoreLabel" text="&lt;score&gt;">
                      <graphic>
                         <Label text="Score:" />
@@ -53,11 +48,7 @@
             </ListView>
             <VBox alignment="TOP_RIGHT" prefWidth="100.0">
                <children>
-                  <Label fx:id="playerNameLabel" text="&lt;you&gt;">
-                     <graphic>
-                        <Label fx:id="playerEloLabel" text="&lt;elo&gt;" />
-                     </graphic>
-                  </Label>
+                  <Label fx:id="playerNameLabel" text="You" />
                   <Label fx:id="playerScoreLabel" text="&lt;score&gt;">
                      <graphic>
                         <Label text="Score:" />

@@ -3,12 +3,16 @@ package com.go_game.client;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.List;
+import java.util.Arrays;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -38,13 +42,10 @@ public class MenuController {
     private URL location;
 
     @FXML
-    private LineChart<?, ?> eloLineChart;
+    private Button exitButton;
 
     @FXML
     private VBox leftPanelVBox;
-
-    @FXML
-    private Button logoutButton;
 
     @FXML
     private HBox logoutHBox;
@@ -62,10 +63,7 @@ public class MenuController {
     private HBox modeSelectHBox;
 
     @FXML
-    private Label nameDisplayLabel;
-
-    @FXML
-    private ListView<?> replayListView;
+    private Button replayButton;
 
     @FXML
     private VBox rightPanelVBox;
@@ -78,19 +76,17 @@ public class MenuController {
 
     @FXML
     private Button select9x9Button;
-
+    
     @FXML
     void initialize() {
-        assert eloLineChart != null : "fx:id=\"eloLineChart\" was not injected: check your FXML file 'menu.fxml'.";
+        assert exitButton != null : "fx:id=\"exitButton\" was not injected: check your FXML file 'menu.fxml'.";
         assert leftPanelVBox != null : "fx:id=\"leftPanelVBox\" was not injected: check your FXML file 'menu.fxml'.";
-        assert logoutButton != null : "fx:id=\"logoutButton\" was not injected: check your FXML file 'menu.fxml'.";
         assert logoutHBox != null : "fx:id=\"logoutHBox\" was not injected: check your FXML file 'menu.fxml'.";
         assert mainAnchorPane != null : "fx:id=\"mainAnchorPane\" was not injected: check your FXML file 'menu.fxml'.";
         assert menuHBox != null : "fx:id=\"menuHBox\" was not injected: check your FXML file 'menu.fxml'.";
         assert middlePanelVBox != null : "fx:id=\"middlePanelVBox\" was not injected: check your FXML file 'menu.fxml'.";
         assert modeSelectHBox != null : "fx:id=\"modeSelectHBox\" was not injected: check your FXML file 'menu.fxml'.";
-        assert nameDisplayLabel != null : "fx:id=\"nameDisplayLabel\" was not injected: check your FXML file 'menu.fxml'.";
-        assert replayListView != null : "fx:id=\"replayListView\" was not injected: check your FXML file 'menu.fxml'.";
+        assert replayButton != null : "fx:id=\"replayButton\" was not injected: check your FXML file 'menu.fxml'.";
         assert rightPanelVBox != null : "fx:id=\"rightPanelVBox\" was not injected: check your FXML file 'menu.fxml'.";
         assert select13x13Button != null : "fx:id=\"select13x13Button\" was not injected: check your FXML file 'menu.fxml'.";
         assert select19x19Button != null : "fx:id=\"select19x19Button\" was not injected: check your FXML file 'menu.fxml'.";
@@ -99,14 +95,11 @@ public class MenuController {
         select13x13Button.setOnAction(event -> startXxXGame(13));
         select19x19Button.setOnAction(event -> startXxXGame(19));
         select9x9Button.setOnAction(event -> startXxXGame(9));
-
     }
 
 
     @FXML
     void logOut() {
-        // TODO: send logout information to server
-
         try {
             App.setRoot("login");
         } catch (IOException e) {
@@ -114,6 +107,20 @@ public class MenuController {
         }
     }
 
+    @FXML
+    void showReplays() {
+        // TODO: fetch replays from server
+
+        //! for testing
+        List<List<String>> sampleList = Arrays.asList(
+                Arrays.asList("John", "Doe", "30"),
+                Arrays.asList("Jane", "Smith", "25"),
+                Arrays.asList("Bob", "Johnson", "40")
+        );
+
+        replayAlert(sampleList);
+
+    }
     
     
     private void startXxXGame(int x) {
@@ -122,6 +129,38 @@ public class MenuController {
         gameModeAlert(x);
 
     }
+
+    private void replayAlert(List<List<String>> replayList) {
+        Alert alert = new Alert(Alert.AlertType.NONE, "", ButtonType.CLOSE);
+        alert.initStyle(StageStyle.UNDECORATED);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
+        alert.getDialogPane().setPrefSize(300, 300);
+
+        ListView<String> listView = new ListView<>();
+        ObservableList<String> items = FXCollections.observableArrayList();
+
+        for (List<String> entry : replayList) {
+            items.add(String.join("  |  ", entry));
+        }
+
+        listView.setItems(items);
+
+        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                try {
+                    App.setRoot("replay");
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        VBox vBox = new VBox(listView);
+        alert.getDialogPane().setContent(vBox);
+
+        alert.showAndWait();
+    }
+
 
     private void gameModeAlert(int x) {
         Alert alert = new Alert(AlertType.NONE, "", ButtonType.CLOSE);

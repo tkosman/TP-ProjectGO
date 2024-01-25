@@ -55,22 +55,10 @@ public class GameController {
     private ListView<?> moveBoardListView;
 
     @FXML
-    private Label oponentEloLabel;
-
-    @FXML
-    private Label oponentNameLabel;
-
-    @FXML
     private Label oponentScoreLabel;
 
     @FXML
     private Button passButton;
-
-    @FXML
-    private Label playerEloLabel;
-
-    @FXML
-    private Label playerNameLabel;
 
     @FXML
     private Label playerScoreLabel;
@@ -86,16 +74,10 @@ public class GameController {
         assert exitButton != null : "fx:id=\"exitButton\" was not injected: check your FXML file 'game.fxml'.";
         assert mainHBox != null : "fx:id=\"mainHBox\" was not injected: check your FXML file 'game.fxml'.";
         assert moveBoardListView != null : "fx:id=\"moveBoardListView\" was not injected: check your FXML file 'game.fxml'.";
-        assert oponentEloLabel != null : "fx:id=\"oponentEloLabel\" was not injected: check your FXML file 'game.fxml'.";
-        assert oponentNameLabel != null : "fx:id=\"oponentNameLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert oponentScoreLabel != null : "fx:id=\"oponentScoreLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert passButton != null : "fx:id=\"passButton\" was not injected: check your FXML file 'game.fxml'.";
-        assert playerEloLabel != null : "fx:id=\"playerEloLabel\" was not injected: check your FXML file 'game.fxml'.";
-        assert playerNameLabel != null : "fx:id=\"playerNameLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert playerScoreLabel != null : "fx:id=\"playerScoreLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert resignButton != null : "fx:id=\"resignButton\" was not injected: check your FXML file 'game.fxml'.";
-
-
 
 
         int gridSize = 9;
