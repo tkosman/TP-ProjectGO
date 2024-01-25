@@ -28,6 +28,7 @@ public class ClientConnection
     public void sendMessage(Object message) throws IOException
     {
         outputStream.writeObject(message);
+        outputStream.reset();
     }
     
     public Object receiveMessage() throws IOException, ClassNotFoundException

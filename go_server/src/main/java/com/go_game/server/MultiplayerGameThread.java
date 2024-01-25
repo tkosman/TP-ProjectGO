@@ -1,8 +1,6 @@
 package com.go_game.server;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.sql.Timestamp;
 
 import shared.enums.PlayerColors;
@@ -19,34 +17,28 @@ import shared.messages.PlayerPassedMsg;
 //? This class will be responsible for game logic and will be an individual thread for each game session
 public class MultiplayerGameThread implements Runnable
 {
-    private ObjectOutputStream toPlayer1;
-    private ObjectInputStream fromPlayer1;
-    private ObjectOutputStream toPlayer2;
-    private ObjectInputStream fromPlayer2;
     private static int gameID = 0;
     private boolean previousWasPass = false;
     private boolean gameOver = false;
 
+    private ClientConnection player1Connection;
+    private ClientConnection player2Connection;
     private GameLogic gameLogic;
 
-    //! I assume that player 1 is always black and player 2 is always white
+    //TODO: Change assumption that player 1 is always black and player 2 is always white
 
-    //TODO: pass socket to close it later
     public MultiplayerGameThread(ClientConnection player1Connection, ClientConnection player2Connection, int boardSize) throws IOException
     {
-        this.toPlayer1 = player1Connection.getOutputStream();
-        this.fromPlayer1 = player1Connection.getInputStream();
-        this.toPlayer2 = player2Connection.getOutputStream();
-        this.fromPlayer2 = player2Connection.getInputStream();
+
+        this.player1Connection = player1Connection;
+        this.player2Connection = player2Connection;
 
         gameLogic = new GameLogic(boardSize);
         gameID++;
 
         //! 4 OUT
-        toPlayer1.writeObject(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
-        toPlayer1.reset();
-        toPlayer2.writeObject(new GameJoinedMsg(gameID, PlayerColors.WHITE, gameLogic.getWhoseTurn()));
-        toPlayer2.reset();
+        player1Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
+        player2Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.WHITE, gameLogic.getWhoseTurn()));
 
 
         //! HANDSHAKE FINISHED
@@ -71,16 +63,16 @@ public class MultiplayerGameThread implements Runnable
                 {
                     //! 1 IN +++++++++ -> Player 1 playing and player 2 sending OK
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " Player BLACK playing"); //! for debugging purposes
-                    moveMsg = (MoveMsg) fromPlayer1.readObject();
+                    moveMsg = (MoveMsg) player1Connection.receiveMessage();
                     System.out.println(moveMsg); //! for debugging purposes
-                    OkMsg okMsg = (OkMsg) fromPlayer2.readObject();
+                    OkMsg okMsg = (OkMsg) player2Connection.receiveMessage();
                 }
                 else
                 {
                     //! 1 IN +++++++++ -> Player 2 playing and player 1 sending OK
                     System.out.println(new Timestamp(System.currentTimeMillis()) + " Player WHITE playing"); //! for debugging purposes
-                    moveMsg = (MoveMsg) fromPlayer2.readObject();
-                    OkMsg okMsg = (OkMsg) fromPlayer1.readObject();
+                    moveMsg = (MoveMsg) player2Connection.receiveMessage();
+                    OkMsg okMsg = (OkMsg) player1Connection.receiveMessage();
                 }
 
                 if (moveMsg.playerPassed())
@@ -98,9 +90,8 @@ public class MultiplayerGameThread implements Runnable
                     else
                     {
                         previousWasPass = true;
-                        toPlayer1.writeObject(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
-                        toPlayer2.reset();
-                        toPlayer2.writeObject(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
+                        player1Connection.sendMessage(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
+                        player2Connection.sendMessage(new PlayerPassedMsg(gameLogic.getWhoseTurn()));
                         switchTurns();
                         continue;
                     }
@@ -121,20 +112,16 @@ public class MultiplayerGameThread implements Runnable
                     {   
                         //! 2 OUT ##########
                         System.out.println(new Timestamp(System.currentTimeMillis()) + " INVALID MOVE BY PLAYER 1\n"); //! for debugging purposes
-                        toPlayer1.reset();
-                        toPlayer1.writeObject(new MoveNotValidMsg(1));
-                        toPlayer2.reset();
-                        toPlayer2.writeObject(new MoveNotValidMsg(1));
+                        player1Connection.sendMessage(new MoveNotValidMsg(1));
+                        player2Connection.sendMessage(new MoveNotValidMsg(1));
                         
                     }
                     else 
                     {
                         //! 2 OUT ##########
                         System.out.println(new Timestamp(System.currentTimeMillis()) + " INVALID MOVE BY PLAYER 2\n"); //! for debugging purposes
-                        toPlayer2.reset();
-                        toPlayer2.writeObject(new MoveNotValidMsg(2));
-                        toPlayer1.reset();
-                        toPlayer1.writeObject(new MoveNotValidMsg(2));
+                        player1Connection.sendMessage(new MoveNotValidMsg(2));
+                        player2Connection.sendMessage(new MoveNotValidMsg(2));
                     }
                 }
                 else
@@ -167,11 +154,9 @@ public class MultiplayerGameThread implements Runnable
 
         //! 2 ########## OUT -> Sending board state to players
         System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 1"); //! for debugging purposes
-        toPlayer1.writeObject(boardStateMsg);
-        toPlayer1.reset();
+        player1Connection.sendMessage(boardStateMsg);
         System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING BOARD STATE TO PLAYER 2 "); //! for debugging purposes
-        toPlayer2.writeObject(boardStateMsg);
-        toPlayer2.reset();
+        player2Connection.sendMessage(boardStateMsg);
     }
 
     
@@ -209,8 +194,8 @@ public class MultiplayerGameThread implements Runnable
             float[] scores = gameLogic.calculateScore();
             String resultMessage = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
             try {
-                toPlayer1.writeObject(new GameOverMsg(resultMessage, PlayerColors.BLACK));
-                toPlayer2.writeObject(new GameOverMsg(resultMessage, PlayerColors.WHITE));
+                player1Connection.sendMessage(new GameOverMsg(resultMessage, PlayerColors.BLACK));
+                player2Connection.sendMessage(new GameOverMsg(resultMessage, PlayerColors.WHITE));
             } catch (IOException e) {
                 e.printStackTrace();
             }
