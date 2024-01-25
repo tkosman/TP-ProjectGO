@@ -227,7 +227,7 @@ public class GameLogic
         }
     }
 
-    private int[] countTerritory()
+    public int[] countTerritory()
     {
 
         //TODO: We need to remove dead stones from the board before counting territory
@@ -282,12 +282,16 @@ public class GameLogic
         return stone.toPlayerColors();
     }
 
-    public float[] calculateScore()
+    public int[] countCapturedStones()
     {
-        int[] territory = countTerritory();
+        return capturedStones;
+    }
+
+    public float[] calculateScore(int[] territoryScore)
+    {
         float[] score = new float[2];
-        score[0] = territory[0] + capturedStones[0];
-        score[1] = territory[1] + capturedStones[1];
+        score[0] = territoryScore[0] + capturedStones[0];
+        score[1] = territoryScore[1] + capturedStones[1];
         score[1] += 6.5; //? Komi
         return score;
     }
