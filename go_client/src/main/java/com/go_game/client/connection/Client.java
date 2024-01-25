@@ -167,7 +167,7 @@ public class Client implements Runnable
             PlayerColors winner = gameOverMsg.getWinner();
             String description = gameOverMsg.getdescription();
             System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + description);
-            System.exit(0);
+            // System.exit(0);
         }
         else
         {

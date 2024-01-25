@@ -229,6 +229,8 @@ public class GameLogic
 
     private int[] countTerritory()
     {
+
+        //TODO: We need to remove dead stones from the board before counting territory
         boolean[][] visited = new boolean[boardSize][boardSize];
         int[] territory = new int[2];
         for (int x = 0; x < boardSize; x++)
