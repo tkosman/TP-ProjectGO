@@ -13,19 +13,21 @@ import shared.messages.PlayerPassedMsg;
 import shared.other.Logger;
 
 
-
 /**
  * Represents a thread that handles a multiplayer game session between two players.
  * This class implements the Runnable interface and is designed to be run in a separate thread.
  * It manages communication between the players.
  * 
- * Used messages:
+ * Sends messages:
  * - GameJoinedMsg()    - sent to both players when the game starts
  * - MoveNotValidMsg()  - sent to both players when a move is not valid
  * - PlayerPassedMsg()  - sent to both players when a player passes
  * - BoardStateMsg()    - sent to both players when a valid move is made
  * - GameOverMsg()      - sent to both players when the game is over
  * 
+ * Receives messages:
+ * - MoveMsg()          - sent by the player whose turn it is and is about to make a move
+ * - OkMsg()            - sent by the other player
  */
 public class MultiplayerGameThread implements Runnable
 {
@@ -58,6 +60,13 @@ public class MultiplayerGameThread implements Runnable
         //TODO: close sockets
     }
 
+    /**
+     * Executes the game logic for a multiplayer game session.
+     * Continuously runs until the game is over.
+     * Receives moves from players, processes them, and updates the game state accordingly.
+     * Sends messages to players to inform them about the game progress.
+     * Handles exceptions related to I/O and class loading.
+     */
     @Override
     public void run()
     {
@@ -119,6 +128,17 @@ public class MultiplayerGameThread implements Runnable
         }
     }
 
+    /**
+     * Receives a move from the player whose turn it is.
+     * 
+     * Used messages:
+     * - MoveMsg()          - sent by the player whose turn it is and is about to make a move
+     * - OkMsg()            - sent by the other player
+     * 
+     * @return MoveMsg object containing the move coordinates
+     * @throws ClassNotFoundException
+     * @throws IOException
+     */
     private MoveMsg receiveMove() throws ClassNotFoundException, IOException
     {
         MoveMsg moveMsg;
@@ -137,13 +157,33 @@ public class MultiplayerGameThread implements Runnable
         return moveMsg;
     }
 
+    /**
+     * Sends a message to both players.
+     * 
+     * Used messages:
+     * - MoveNotValidMsg()  - sent to both players when a move is not valid
+     * - PlayerPassedMsg()  - sent to both players when a player passes
+     * - BoardStateMsg()    - sent to both players when a valid move is made
+     * - GameOverMsg()      - sent to both players when the game is over
+     * 
+     * @param message AbstractMessage object to be sent to both players
+     * @throws IOException
+     */
     private void sendMessageToBothPlayers(AbstractMessage message) throws IOException
     {
         logger.log("Sending message to both players: " + message.getType());
         player1Connection.sendMessage(message);
         player2Connection.sendMessage(message);
     }
-    
+
+    /**
+     * Checks if a move is valid based on the given coordinates.
+     * 
+     * @param x The x-coordinate of the move.
+     * @param y The y-coordinate of the move.
+     * @return true if the move is valid, false otherwise.
+     * @throws IOException if there is an error sending a message to the players.
+     */
     private boolean isMoveValid(int x, int y) throws IOException
     {
         
@@ -168,6 +208,16 @@ public class MultiplayerGameThread implements Runnable
         return true;
     }
 
+    /**
+     * Checks if the game is over.
+     * If the game is over, calculates the scores and sends a game over message to both players.
+     * 
+     * Used messages:
+     * - GameOverMsg() - sent to both players when the game is over
+     * 
+     * @return true if the game is over, false otherwise.
+     * @throws IOException if there is an error sending the game over message.
+     */
     private boolean isGameOver() throws IOException
     {
         if (gameOver)
@@ -181,11 +231,17 @@ public class MultiplayerGameThread implements Runnable
         return false;
     }
 
+    /**
+     * Logs the current ID of the game and players turn.
+     */
     private void logGameState()
     {
         logger.say("\n\n####################### GAME " + gameID + " #######################" + "\n" + "TURN: " + gameLogic.getWhoseTurn());
     }
 
+    /**
+     * Switches the turns between players in the game.
+     */
     private void switchTurns()
     {
         gameLogic.setWhoseTurn(gameLogic.getWhoseTurn().toggle());
