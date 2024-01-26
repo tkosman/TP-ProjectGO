@@ -51,9 +51,8 @@ public class Server
                     if (gameMode == GameMode.REPLAY)
                     {
                         //! idk if that's how to do it
-                        new ReplayThread(toClient, fromClient);
-                        System.out.println("REPLAY");
                         //TODO: start a new thread for replay
+                        // new ReplayThread(toClient, fromClient);
                     }
                     else if (gameMode == GameMode.BOT)
                     {
