@@ -1,6 +1,8 @@
 package com.go_game.server;
 
 import java.io.IOException;
+
+import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
 import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
@@ -10,6 +12,7 @@ import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
 import shared.messages.PlayerPassedMsg;
+import shared.messages.ResultsNegotiationMsg;
 import shared.other.Logger;
 
 
@@ -58,6 +61,8 @@ public class MultiplayerGameThread implements Runnable
         fred.start();
 
         //TODO: close sockets
+        // player1Connection.getSocket().close();
+        // player2Connection.getSocket().close();
     }
 
     /**
@@ -107,9 +112,8 @@ public class MultiplayerGameThread implements Runnable
                     //? move is VALID
                     gameLogic.processMove(x, y);
                     gameLogic.captureStones(x, y);
-                    float[] scores = gameLogic.calculateScore();
-                    logger.say("Black: " + scores[0] + ", White: " + scores[1]);
-                    sendMessageToBothPlayers(new BoardStateMsg(gameLogic.getBoard()));
+
+                    sendMessageToBothPlayers(new BoardStateMsg(gameLogic.getBoard(), gameLogic.countCapturedStones()));
                     switchTurns();
                 }
                 else
@@ -208,27 +212,81 @@ public class MultiplayerGameThread implements Runnable
         return true;
     }
 
+    
     /**
-     * Checks if the game is over.
-     * If the game is over, calculates the scores and sends a game over message to both players.
+     * Checks if the game is over and handles the negotiation of results between players.
+     * If both players agree on the results, sends the final results and ends the game.
+     * If players disagree, continues the game with the first player who disagreed.
      * 
-     * Used messages:
-     * - GameOverMsg() - sent to both players when the game is over
-     * 
+     * Sends messages:
+     * - ResultsNegotiationMsg(desc, teritory, capturedStones)  - sends calculated results
+     * - ResultsNegotiationMsg(playerXproposition)              - sends results proposed by opponent
+     * - GameOverMsg()                                          - sends final results and allows to calculate 
+     *
      * @return true if the game is over, false otherwise.
-     * @throws IOException if there is an error sending the game over message.
+     * @throws IOException            if there is an I/O error while sending or receiving messages.
+     * @throws ClassNotFoundException if the received message cannot be cast to the expected type.
      */
-    private boolean isGameOver() throws IOException
+    private boolean isGameOver() throws IOException, ClassNotFoundException
     {
-        if (gameOver)
+        if (!gameOver)
         {
-            float[] scores = gameLogic.calculateScore();
-            String description = "###Game Over###\nBlack: " + scores[0] + ", White: " + scores[1];
-            PlayerColors winner = (scores[0] > scores[1]) ? PlayerColors.BLACK : PlayerColors.WHITE;
-            sendMessageToBothPlayers(new GameOverMsg(description, winner, scores));
+            return false;
+        }
+        int[] territoryScore = gameLogic.countTerritory();
+        int[] capturedStones = gameLogic.countCapturedStones();
+        String description = "Both players passed, negotiating results";
+
+        //? send calculated results to BOTH players
+        sendMessageToBothPlayers(new ResultsNegotiationMsg(description, territoryScore, capturedStones));
+
+        //? get from both players their suggested results
+        ResultsNegotiationMsg player1Results = (ResultsNegotiationMsg) player1Connection.receiveMessage();
+        ResultsNegotiationMsg player2Results = (ResultsNegotiationMsg) player2Connection.receiveMessage();
+        int player1Proposition = player1Results.getPlayerProposition();
+        int player2Proposition = player2Results.getPlayerProposition();
+
+        //? send results to BOTH opposite players
+        player1Connection.sendMessage(new ResultsNegotiationMsg(player2Proposition));
+        player2Connection.sendMessage(new ResultsNegotiationMsg(player1Proposition));
+        
+        //? receive approval from BOTH players
+        ResultsNegotiationMsg player1Approval = (ResultsNegotiationMsg) player1Connection.receiveMessage();
+        ResultsNegotiationMsg player2Approval = (ResultsNegotiationMsg) player2Connection.receiveMessage();
+        
+        if (player1Approval.getAgreement() == AgreementState.AGREE && player2Approval.getAgreement() == AgreementState.AGREE)
+        {
+            int[] finalTerritoryScore = new int[2];
+            finalTerritoryScore[0]  = player1Proposition;
+            finalTerritoryScore[1]  = player2Proposition;
+
+            float[] finalResults = gameLogic.calculateScore(finalTerritoryScore);
+
+            sendMessageToBothPlayers(new GameOverMsg("Game over, results agreed", finalResults));
             return true;
         }
-        return false;
+        else
+        {
+            if (player1Approval.getAgreement() == AgreementState.DISAGREE)
+            {
+                //? player 1 disagreed
+                sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE, PlayerColors.WHITE));
+                gameLogic.setWhoseTurn(PlayerColors.WHITE);
+            }
+            else if (player2Approval.getAgreement() == AgreementState.DISAGREE)
+            {
+                //? player 2 disagreed
+                sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE, PlayerColors.BLACK));
+                gameLogic.setWhoseTurn(PlayerColors.BLACK);
+            }
+            else 
+            {
+                //? both disagreed
+                sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE, gameLogic.getWhoseTurn()));
+            }
+            gameOver = false;
+            return false;
+        }            
     }
 
     /**
