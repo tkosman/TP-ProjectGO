@@ -20,7 +20,7 @@ public class Server
 
     public static void main(String[] args)
     {
-        new Server().runServer();;
+        new Server().runServer();
     }
     
     private void runServer()
@@ -50,6 +50,8 @@ public class Server
                     GameMode gameMode = newPlayerInfo.getGameMode();
                     if (gameMode == GameMode.REPLAY)
                     {
+                        //! idk if that's how to do it
+                        new ReplayThread(toClient, fromClient);
                         System.out.println("REPLAY");
                         //TODO: start a new thread for replay
                     }
