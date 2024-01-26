@@ -253,14 +253,7 @@ public class MultiplayerGameThread implements Runnable
         //? receive approval from BOTH players
         ResultsNegotiationMsg player1Approval = (ResultsNegotiationMsg) player1Connection.receiveMessage();
         ResultsNegotiationMsg player2Approval = (ResultsNegotiationMsg) player2Connection.receiveMessage();
-
-        // if both agree
-        //      send game over message
-        // else
-        //      continue game with (first who disagreed -> opposite player is first)
-
-
-        //TODO: determine whose turn it is
+        
         if (player1Approval.getAgreement() == AgreementState.AGREE && player2Approval.getAgreement() == AgreementState.AGREE)
         {
             int[] finalTerritoryScore = new int[2];
@@ -274,7 +267,23 @@ public class MultiplayerGameThread implements Runnable
         }
         else
         {
-            sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE));
+            if (player1Approval.getAgreement() == AgreementState.DISAGREE)
+            {
+                //? player 1 disagreed
+                sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE, PlayerColors.WHITE));
+                gameLogic.setWhoseTurn(PlayerColors.WHITE);
+            }
+            else if (player2Approval.getAgreement() == AgreementState.DISAGREE)
+            {
+                //? player 2 disagreed
+                sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE, PlayerColors.BLACK));
+                gameLogic.setWhoseTurn(PlayerColors.BLACK);
+            }
+            else 
+            {
+                //? both disagreed
+                sendMessageToBothPlayers(new ResultsNegotiationMsg(AgreementState.DISAGREE, gameLogic.getWhoseTurn()));
+            }
             gameOver = false;
             return false;
         }            
