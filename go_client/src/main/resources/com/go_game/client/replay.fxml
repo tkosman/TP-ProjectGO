@@ -8,11 +8,11 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox fx:id="mainHBox" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@darkTheme.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.GameController">
+<HBox fx:id="mainHBox" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@darkTheme.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.ReplayController">
    <children>
-      <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+      <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
          <children>
-            <HBox fx:id="boardHBox" alignment="CENTER" fillHeight="false" prefHeight="100.0" prefWidth="200.0" />
+            <HBox fx:id="boardHBox" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
             <Pane prefHeight="100.0" prefWidth="200.0" />
          </children>
       </VBox>
@@ -31,7 +31,7 @@
             </HBox>
             <VBox alignment="TOP_RIGHT" prefWidth="100.0">
                <children>
-                  <Label fx:id="oponentNameLabel" text="Oponent" />
+                  <Label fx:id="oponentNameLabel" text="White" />
                   <Label fx:id="oponentScoreLabel" text="&lt;score&gt;">
                      <graphic>
                         <Label text="Score:" />
@@ -49,7 +49,7 @@
             </ListView>
             <VBox alignment="TOP_RIGHT" prefWidth="100.0">
                <children>
-                  <Label fx:id="playerNameLabel" text="You" />
+                  <Label fx:id="playerNameLabel" text="Black" />
                   <Label fx:id="playerScoreLabel" text="&lt;score&gt;">
                      <graphic>
                         <Label text="Score:" />
@@ -60,14 +60,9 @@
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </padding>
             </VBox>
-            <Button fx:id="passButton" mnemonicParsing="false" onAction="#pass" prefWidth="70.0" text="Pass">
+            <Button fx:id="selectReplayButton" mnemonicParsing="false" text="select different replay">
                <VBox.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </VBox.margin>
-            </Button>
-            <Button fx:id="resignButton" mnemonicParsing="false" onAction="#resign" prefWidth="70.0" text="Resign">
-               <VBox.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                  <Insets top="5.0" />
                </VBox.margin>
             </Button>
          </children>

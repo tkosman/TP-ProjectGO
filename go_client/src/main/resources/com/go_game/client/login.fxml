@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Rectangle2D?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane fx:id="mainAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@darkTheme.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.LoginController">
-   <children>
-      <VBox fx:id="menuVBox" alignment="CENTER" fillWidth="false" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<BorderPane fx:id="mainBorderPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" stylesheets="@darkTheme.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.go_game.client.LoginController">
+   <center>
+      <VBox fx:id="menuVBox" alignment="CENTER" fillWidth="false" prefHeight="400.0" prefWidth="600.0" styleClass="alert" stylesheets="@darkTheme.css" BorderPane.alignment="CENTER">
          <children>
-            <ImageView fx:id="logoImageView" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="logoImageView" fitHeight="200.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                <VBox.margin>
                   <Insets bottom="25.0" />
                </VBox.margin>
@@ -23,27 +21,41 @@
                   <Image url="@logo.png" />
                </image>
             </ImageView>
-            <TextField fx:id="loginTextField" maxWidth="1.7976931348623157E308" prefWidth="205.0" promptText="login">
-               <VBox.margin>
-                  <Insets bottom="25.0" />
-               </VBox.margin>
-            </TextField>
-            <PasswordField fx:id="passwordTextField" prefWidth="205.0" promptText="password">
+            <Button fx:id="playButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="60.0" minWidth="200.0" mnemonicParsing="false" onAction="#play" text="PLAY">
                <VBox.margin>
                   <Insets />
                </VBox.margin>
-            </PasswordField>
-            <Label fx:id="statusLabel" alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="205.0" textAlignment="RIGHT">
-               <VBox.margin>
-                  <Insets bottom="5.0" top="5.0" />
-               </VBox.margin></Label>
-            <ButtonBar fx:id="menuButtonBar" maxWidth="1.7976931348623157E308" prefHeight="40.0" prefWidth="200.0">
-              <buttons>
-                <Button fx:id="registerButton" mnemonicParsing="false" onAction="#register" text="register" />
-                  <Button fx:id="loginButton" mnemonicParsing="false" onAction="#logIn" text="login" />
-              </buttons>
-            </ButtonBar>
+            </Button>
          </children>
       </VBox>
-   </children>
-</AnchorPane>
+   </center>
+   <bottom>
+      <VBox alignment="BOTTOM_RIGHT" styleClass="border-pane" stylesheets="@darkTheme.css" BorderPane.alignment="CENTER">
+         <children>
+            <ImageView fitHeight="90.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true" styleClass="anchor-pane">
+               <image>
+                  <Image url="@qr-code.png" />
+               </image>
+               <VBox.margin>
+                  <Insets bottom="5.0" right="7.0" />
+               </VBox.margin>
+               <viewport>
+                  <Rectangle2D />
+               </viewport>
+            </ImageView>
+            <Label fx:id="serverStatusLabel" contentDisplay="RIGHT" text="Server status">
+               <VBox.margin>
+                  <Insets bottom="5.0" right="7.0" />
+               </VBox.margin>
+               <graphic>
+                  <ImageView fx:id="serverStatusImageView" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@bad.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Label>
+         </children>
+      </VBox>
+   </bottom>
+</BorderPane>

@@ -1,10 +1,7 @@
 package com.go_game.server;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Date;
 
 import shared.enums.GameMode;
@@ -18,33 +15,8 @@ public class Server
     private static final int PORT = 4444;
     private static int player_index = 1;
     
-    //TODO
-    /*
-    * add Client connection class sth like:
-    public class ClientConnection {
-        private Socket socket;
-        private ObjectOutputStream outputStream;
-        private ObjectInputStream inputStream;
-        
-        public ClientConnection(Socket socket) throws IOException {
-            this.socket = socket;
-            this.outputStream = new ObjectOutputStream(socket.getOutputStream());
-            this.inputStream = new ObjectInputStream(socket.getInputStream());
-        }
-        
-        public void sendMessage(Object message) throws IOException {
-            outputStream.writeObject(message);
-        }
-        
-        public Object receiveMessage() throws IOException, ClassNotFoundException {
-            return inputStream.readObject();
-        }
-    }
-    */
-    //TODO: to be refactored (look above)
-    private static Socket waitingPlayer9x9 = null;
-    private static ObjectInputStream fromWaitingPlayer9x9;
-    private static ObjectOutputStream toWaitingPlayer9x9;
+    ClientConnection clientConnection;
+    ClientConnection waitingPlayer9x9Connection;
 
     public static void main(String[] args)
     {
@@ -61,21 +33,18 @@ public class Server
             {
                 //! 1 IN
                 //? Wait for a new player to join
-                Socket clientSocket = serverSocket.accept();
-                //? Create a new output for the newly joined player
-                ObjectOutputStream toClient = new ObjectOutputStream(clientSocket.getOutputStream());
+                clientConnection = new ClientConnection(serverSocket.accept());
 
                 //! 2 OUT
-                toClient.writeObject(new IndexSetMsg(player_index));
+                clientConnection.sendMessage(new IndexSetMsg(player_index));
                 player_index++; //? Increment player index
 
-                System.out.println(new Date() + "\nPlayer joined session with IP address " + clientSocket.getInetAddress().getHostAddress() + "\n");
+                System.out.println(new Date() + "\nPlayer joined session with IP address " + clientConnection.getSocket().getInetAddress().getHostAddress() + "\n");
 
-                ObjectInputStream fromClient = new ObjectInputStream(clientSocket.getInputStream());
                 try
                 { 
                     //! 3 IN
-                    ClientInfoMsg newPlayerInfo = (ClientInfoMsg)fromClient.readObject();
+                    ClientInfoMsg newPlayerInfo = (ClientInfoMsg)clientConnection.receiveMessage();
                     System.out.println(newPlayerInfo);
 
                     GameMode gameMode = newPlayerInfo.getGameMode();
@@ -97,18 +66,14 @@ public class Server
 
                         if(boardSize == BoardSize.NINE_X_NINE)
                         {
-                            if(waitingPlayer9x9 == null)
+                            if(waitingPlayer9x9Connection == null)
                             {
-                                waitingPlayer9x9 = clientSocket;
-                                fromWaitingPlayer9x9 = fromClient;
-                                toWaitingPlayer9x9 = toClient;
+                                waitingPlayer9x9Connection = new ClientConnection(clientConnection.getSocket(), clientConnection.getOutputStream(), clientConnection.getInputStream());
                             }
                             else
                             {
-                                new GameLogicThread(toClient, fromClient, toWaitingPlayer9x9, fromWaitingPlayer9x9, boardSize);
-                                waitingPlayer9x9 = null;
-                                fromWaitingPlayer9x9 = null;
-                                toWaitingPlayer9x9 = null;
+                                new MultiplayerGameThread(clientConnection, waitingPlayer9x9Connection, 9);
+                                waitingPlayer9x9Connection = null;
                             }
 
                         }

@@ -13,5 +13,7 @@ public enum MessageType
     GAME_JOINED,    //? sent to say that the game was joined
     MOVE_NOT_VALID, //? sent to say that the move was invalid
     REPLAY_FETCH,   //? sent to show all the replays
-    CLOSE           //? sent to close connection
+    CLOSE,           //? sent to close connection
+    GAME_OVER,      //? sent to say that the game is over
+    PLAYER_PASSED,  //? sent to say that the player passed
 }
