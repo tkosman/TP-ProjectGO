@@ -17,13 +17,10 @@ import shared.messages.StringMsg;
 // TODO: database
 public class ReplayThread implements Runnable {
     private DBManager dbm;
-    private ObjectOutputStream toPlayer;
-    private ObjectInputStream fromPlayer;
+    private ClientConnection clientConnection;
 
-    public ReplayThread(ObjectOutputStream toPlayer, ObjectInputStream fromPlayer) {
+    public ReplayThread(ClientConnection clientConnection) {
         this.dbm = new DBManager();
-        this.toPlayer = toPlayer;
-        this.fromPlayer = fromPlayer;
         
         Thread fred = new Thread(this);
         fred.start();
@@ -52,18 +49,17 @@ public class ReplayThread implements Runnable {
             //     System.out.println(row);
             // }
 
-            toPlayer.reset();
-            toPlayer.writeObject(new ReplayFetchMsg(replayList));
+            clientConnection.sendMessage(new ReplayFetchMsg(replayList));
 
             // wait for response
-            Object selectMessage = fromPlayer.readObject();
+            
+            Object selectMessage = clientConnection.receiveMessage();
         
             if (selectMessage.toString().contains("INDEX_SET")) {
                 int replayID = ((IndexSetMsg) selectMessage).getIndex();
                 String replay = dbm.getReplayString(replayID).getString("replay_string");
 
-                toPlayer.reset();
-                toPlayer.writeObject(new StringMsg(replay));
+                clientConnection.sendMessage(new StringMsg(replay));
 
                 rs.close();
                 exit();
@@ -85,8 +81,7 @@ public class ReplayThread implements Runnable {
 
     private void exit() {
         try {
-            this.fromPlayer.close();
-            this.toPlayer.close();
+            clientConnection.closeConnection();
         } catch (IOException e) {
             e.printStackTrace();
         }
