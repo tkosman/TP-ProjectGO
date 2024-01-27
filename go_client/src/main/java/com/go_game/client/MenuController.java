@@ -39,6 +39,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import shared.enums.BoardSize;
 import shared.enums.GameMode;
 import shared.messages.ClientInfoMsg;
 import shared.messages.GameJoinedMsg;
@@ -111,9 +112,9 @@ public class MenuController {
         assert select19x19Button != null : "fx:id=\"select19x19Button\" was not injected: check your FXML file 'menu.fxml'.";
         assert select9x9Button != null : "fx:id=\"select9x9Button\" was not injected: check your FXML file 'menu.fxml'.";
 
-        select13x13Button.setOnAction(event -> startXxXGame(13));
-        select19x19Button.setOnAction(event -> startXxXGame(19));
-        select9x9Button.setOnAction(event -> startXxXGame(9));
+        select13x13Button.setOnAction(event -> startXxXGame(BoardSize.THIRTEEN_X_THIRTEEN));
+        select19x19Button.setOnAction(event -> startXxXGame(BoardSize.NINETEEN_X_NINETEEN));
+        select9x9Button.setOnAction(event -> startXxXGame(BoardSize.NINE_X_NINE));
     }
 
 
@@ -131,21 +132,33 @@ public class MenuController {
         }
     }
     
+    private Socket socket;
+    private ObjectInputStream fromServer;
+    private ObjectOutputStream toServer;
     
-    private void startXxXGame(int x) {
+    private void startXxXGame(BoardSize bs) {
         try {
-            this.client = new Client(new Socket(HOST, PORT));
+            // this.client = new Client(new Socket(HOST, PORT));
 
-            System.out.println(client.receiveMessage().toString());
+            // System.out.println(client.receiveMessage().toString());
             // Continue with the UI-related code on the JavaFX thread
-            Platform.runLater(() -> gameModeAlert(x));
-        } catch (IOException | ClassNotFoundException e) {
+
+            socket = new Socket(HOST, PORT);
+            fromServer = new ObjectInputStream(socket.getInputStream());
+            toServer = new ObjectOutputStream(socket.getOutputStream());
+
+            toServer.writeObject(new ClientInfoMsg(bs, GameMode.MULTI_PLAYER));
+            toServer.reset();
+
+            Platform.runLater(() -> gameModeAlert());
+        } catch (IOException  e) {
+            System.out.println("dupa");
             e.printStackTrace();
         }
     }
 
 
-    private void gameModeAlert(int x) {
+    private void gameModeAlert() {
         Alert alert = new Alert(AlertType.NONE, "", ButtonType.CLOSE);
         alert.initStyle(StageStyle.UNDECORATED);
         alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
@@ -179,11 +192,11 @@ public class MenuController {
         botButton.setMaxWidth(Double.MAX_VALUE);
 
         alert.setOnCloseRequest(event -> {
-            try {
-                client.closeConnection();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // try {
+            //     //! client.closeConnection();
+            // } catch (IOException e) {
+            //     e.printStackTrace();
+            // }
             alert.setResult(ButtonType.CANCEL);
         });
 
@@ -203,10 +216,17 @@ public class MenuController {
                 public void run() {
                     try {
                         // Replace this with your logic to receive a message from the server
-                        GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) client.receiveMessage();
+                        // GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) client.receiveMessage();
     
-                        System.out.println(gameJoinedMsg.toString());
+                        // System.out.println(gameJoinedMsg.toString());
                         // When a message is received, count down the latch
+                        
+                        IndexSetMsg playerIndex = (IndexSetMsg)fromServer.readObject();
+                        System.out.println("You are player " + playerIndex.getIndex() + "\n");
+
+                        GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) fromServer.readObject();
+                        System.out.println("Game ID: " + gameJoinedMsg.getGameID());
+
                         latch.countDown();
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
@@ -224,7 +244,6 @@ public class MenuController {
 
                     if (!alert.getResult().equals(ButtonType.CANCEL)) {
                         try {
-                            this.client.sendMessage(new ClientInfoMsg(GameMode.MULTI_PLAYER));
                             App.setRoot("game", this, new GameController());
                         } catch (IOException ex) {
                             ex.printStackTrace();
@@ -246,7 +265,7 @@ public class MenuController {
 
             if (!alert.getResult().equals(ButtonType.CANCEL)) {
                 try {
-                    this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
+                    //! this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
                     App.setRoot("game", this, new GameController());
                 } catch (IOException e) {
                     e.printStackTrace();

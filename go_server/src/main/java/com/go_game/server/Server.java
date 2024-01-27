@@ -41,7 +41,7 @@ public class Server
 
                 System.out.println(new Date() + "\nPlayer joined session with IP address " + clientConnection.getSocket().getInetAddress().getHostAddress() + "\n");
 
-                //! WHEN CLIENT DISCONNECTS THIS BLOCKS ALL COMMUNICATION WITH THE SERVER (error in line 47)
+                //! WHEN CLIENT DISCONNECTS THIS BLOCKS ALL COMMUNICATION WITH THE SERVER (error in line 48)
                 try
                 { 
                     //! 3 IN
