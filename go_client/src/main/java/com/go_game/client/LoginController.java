@@ -65,7 +65,7 @@ public class LoginController implements Runnable {
         Platform.runLater(() -> {
             try {
                 this.threadFlag = false;
-                App.setRoot("menu");
+                App.setRoot("menu", this, new MenuController());
             } catch (IOException e) {
                 e.printStackTrace();
             }

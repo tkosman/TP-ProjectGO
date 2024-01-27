@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.go_game.client.connection.Client;
 import com.go_game.client.game_model.ColorEnum;
 
 import javafx.application.Platform;
@@ -29,7 +30,12 @@ import javafx.scene.shape.Shape;
 import javafx.stage.StageStyle;
 
 public class GameController {
+    private Client client;
     
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
     @FXML
     private ResourceBundle resources;
 
@@ -179,7 +185,7 @@ public class GameController {
         // TODO: loose game
 
         try {
-            App.setRoot("menu");
+            App.setRoot("menu", this, new MenuController());
         } catch (IOException e) {
             e.printStackTrace();
         }

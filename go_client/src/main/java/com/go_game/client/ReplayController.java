@@ -229,7 +229,7 @@ public class ReplayController {
     @FXML
     void exit() {
         try {
-            App.setRoot("menu");
+            App.setRoot("menu", this, new MenuController());
         } catch (IOException e) {
             e.printStackTrace();
         }

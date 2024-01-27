@@ -1,8 +1,15 @@
 package com.go_game.client;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.CountDownLatch;
+
+import com.go_game.client.connection.Client;
+
 import java.util.List;
 import java.util.Arrays;
 
@@ -32,8 +39,20 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import shared.enums.GameMode;
+import shared.messages.ClientInfoMsg;
+import shared.messages.GameJoinedMsg;
+import shared.messages.IndexSetMsg;
 
 public class MenuController {
+    public static final int PORT = 4444;
+    private final static String HOST = "localhost";
+
+    private Client client;
+
+    public Client getClient() {
+        return client;
+    }
 
     @FXML
     private ResourceBundle resources;
@@ -100,17 +119,13 @@ public class MenuController {
 
     @FXML
     void logOut() {
-        try {
-            App.setRoot("login");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Platform.exit();
     }
 
     @FXML
     void showReplays() {
         try {
-            App.setRoot("replay");
+            App.setRoot("replay", this, new ReplayController());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -118,10 +133,15 @@ public class MenuController {
     
     
     private void startXxXGame(int x) {
-        // TODO: send x to server
+        try {
+            this.client = new Client(new Socket(HOST, PORT));
 
-        gameModeAlert(x);
-
+            System.out.println(client.receiveMessage().toString());
+            // Continue with the UI-related code on the JavaFX thread
+            Platform.runLater(() -> gameModeAlert(x));
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -159,6 +179,11 @@ public class MenuController {
         botButton.setMaxWidth(Double.MAX_VALUE);
 
         alert.setOnCloseRequest(event -> {
+            try {
+                client.closeConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             alert.setResult(ButtonType.CANCEL);
         });
 
@@ -166,24 +191,53 @@ public class MenuController {
             gameModeSelectVBox.getChildren().clear();
             Platform.runLater(() -> {
                 gameModeSelectVBox.getChildren().add(matchmakingAlert());
-            });            
-            
-            // TODO: change the 4s duration to wait untill oponent found
-            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(4));
-            pauseTransition.setOnFinished(e -> {
-                alert.setResult(ButtonType.OK);
-
-                if (!alert.getResult().equals(ButtonType.CANCEL)) {
-                    try {
-                        App.setRoot("game");
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                
-                alert.close();
             });
 
+            // Create a CountDownLatch with an initial count of 1
+            CountDownLatch latch = new CountDownLatch(1);
+
+            // Set up a listener to receive a message from the server
+            // Assuming you have a method like receiveMessageFromServer() that blocks until a message is received
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Replace this with your logic to receive a message from the server
+                        GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) client.receiveMessage();
+    
+                        System.out.println(gameJoinedMsg.toString());
+                        // When a message is received, count down the latch
+                        latch.countDown();
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+
+            // Create a PauseTransition without a fixed duration
+            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1)); // You can set it to a short duration, e.g., 1 second
+
+            // Set up an event handler to check if the latch is counted down
+            pauseTransition.setOnFinished(e -> {
+                if (latch.getCount() == 0) { // If latch is counted down, proceed
+                    alert.setResult(ButtonType.OK);
+
+                    if (!alert.getResult().equals(ButtonType.CANCEL)) {
+                        try {
+                            this.client.sendMessage(new ClientInfoMsg(GameMode.MULTI_PLAYER));
+                            App.setRoot("game", this, new GameController());
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+
+                    alert.close();
+                } else { // If latch is not counted down, continue waiting
+                    pauseTransition.play();
+                }
+            });
+
+            // Start the initial pause transition
             pauseTransition.play();
         });
 
@@ -192,7 +246,8 @@ public class MenuController {
 
             if (!alert.getResult().equals(ButtonType.CANCEL)) {
                 try {
-                    App.setRoot("game");
+                    this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
+                    App.setRoot("game", this, new GameController());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -244,5 +299,4 @@ public class MenuController {
 
         return circle;
     }
-    
 }
