@@ -1,8 +1,6 @@
 package com.go_game.client;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -10,27 +8,20 @@ import java.util.concurrent.CountDownLatch;
 
 import com.go_game.client.connection.Client;
 
-import java.util.List;
-import java.util.Arrays;
-
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.chart.LineChart;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -46,8 +37,8 @@ import shared.messages.GameJoinedMsg;
 import shared.messages.IndexSetMsg;
 
 public class MenuController {
-    public static final int PORT = 4444;
-    private final static String HOST = "localhost";
+    private static final int PORT = 4444;
+    private static final String HOST = "localhost";
 
     private Client client;
 
@@ -132,27 +123,13 @@ public class MenuController {
         }
     }
     
-    private Socket socket;
-    private ObjectInputStream fromServer;
-    private ObjectOutputStream toServer;
-    
     private void startXxXGame(BoardSize bs) {
         try {
-            // this.client = new Client(new Socket(HOST, PORT));
-
-            // System.out.println(client.receiveMessage().toString());
-            // Continue with the UI-related code on the JavaFX thread
-
-            socket = new Socket(HOST, PORT);
-            fromServer = new ObjectInputStream(socket.getInputStream());
-            toServer = new ObjectOutputStream(socket.getOutputStream());
-
-            toServer.writeObject(new ClientInfoMsg(bs, GameMode.MULTI_PLAYER));
-            toServer.reset();
-
+            this.client = new Client(new Socket(HOST, PORT));
+            this.client.sendMessage(new ClientInfoMsg(bs, GameMode.MULTI_PLAYER));
+            
             Platform.runLater(() -> gameModeAlert());
-        } catch (IOException  e) {
-            System.out.println("dupa");
+        } catch (IOException | ClassNotFoundException  e) {
             e.printStackTrace();
         }
     }
@@ -192,11 +169,11 @@ public class MenuController {
         botButton.setMaxWidth(Double.MAX_VALUE);
 
         alert.setOnCloseRequest(event -> {
-            // try {
-            //     //! client.closeConnection();
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            // }
+            try {
+                this.client.closeConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             alert.setResult(ButtonType.CANCEL);
         });
 
@@ -208,23 +185,15 @@ public class MenuController {
 
             // Create a CountDownLatch with an initial count of 1
             CountDownLatch latch = new CountDownLatch(1);
-
-            // Set up a listener to receive a message from the server
-            // Assuming you have a method like receiveMessageFromServer() that blocks until a message is received
+            
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        // Replace this with your logic to receive a message from the server
-                        // GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) client.receiveMessage();
-    
-                        // System.out.println(gameJoinedMsg.toString());
-                        // When a message is received, count down the latch
-                        
-                        IndexSetMsg playerIndex = (IndexSetMsg)fromServer.readObject();
+                        IndexSetMsg playerIndex = (IndexSetMsg) getClient().receiveMessage();
                         System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
-                        GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) fromServer.readObject();
+                        GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) getClient().receiveMessage();
                         System.out.println("Game ID: " + gameJoinedMsg.getGameID());
 
                         latch.countDown();
@@ -235,7 +204,7 @@ public class MenuController {
             }).start();
 
             // Create a PauseTransition without a fixed duration
-            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1)); // You can set it to a short duration, e.g., 1 second
+            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1));
 
             // Set up an event handler to check if the latch is counted down
             pauseTransition.setOnFinished(e -> {
@@ -265,7 +234,7 @@ public class MenuController {
 
             if (!alert.getResult().equals(ButtonType.CANCEL)) {
                 try {
-                    //! this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
+                    this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
                     App.setRoot("game", this, new GameController());
                 } catch (IOException e) {
                     e.printStackTrace();
