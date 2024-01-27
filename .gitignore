@@ -3,3 +3,4 @@ go_client/target/
 .vscode/
 .DS_Store
 shared/target/
+.VSCodeCounter

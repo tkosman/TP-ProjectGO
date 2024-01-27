@@ -327,4 +327,8 @@ public class GameLogic
     public void setCapturedStones(int[] capturedStones) {
         this.capturedStones = capturedStones;
     }
+
+    public void setBoardSize(int boardSize) {
+        this.boardSize = boardSize;
+    }
 }
