@@ -120,6 +120,20 @@ public class GameLogicTest {
     }
 
     @Test
+    public void testInBoundsAndEmptySpace()
+    {
+        gameLogic = new GameLogic(5);
+        gameLogic.setBoard(decodeBoardString(".BB..\\BWWB.\\BWWB.\\BWWB.\\.BB..\\"));
+        assertTrue(gameLogic.isInBoundsAndEmptySpace(0, 0), "The position (0,0) should be in bounds and empty");
+        assertTrue(gameLogic.isInBoundsAndEmptySpace(4, 4), "The position (4,4) should be in bounds and empty");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(5, 5), "The position (5,5) should be out of bounds");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(4, 5), "The position (5,5) should be out of bounds");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(-1, -1), "The position (-1,-1) should be out of bounds");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(4, -1), "The position (-1,-1) should be out of bounds");
+        assertFalse(gameLogic.isInBoundsAndEmptySpace(2, 1), "The position (2,1) should be occupied");
+    }
+
+    @Test
     public void testIsKoSituationOne()
     {
         gameLogic = new GameLogic(4);
@@ -138,6 +152,35 @@ public class GameLogicTest {
 
         // Check for Ko at (2, 1) - where White would recapture
         assertTrue(gameLogic.isKoSituation(2, 1), "The method should identify a Ko situation correctly");
+    }
+
+    @Test
+    public void testIsKoSituationPreviousBoardNull()
+    {
+        gameLogic = new GameLogic(4);
+        gameLogic.setPreviousBoard(null);
+        assertFalse(gameLogic.isKoSituation(2, 1), "The method should identify a Ko situation correctly");
+    }
+
+    @Test
+    public void testNoKoSituation()
+    {
+        gameLogic = new GameLogic(4);
+        String boardSetup =  ".BW.\\"
+                            + "B.BW\\"
+                            + ".BW.\\"
+                            + "....\\";
+        gameLogic.setPreviousBoard(decodeBoardString(boardSetup));
+
+        Stone[][] boardAfterBlackMove = decodeBoardString(".BW.\\"
+                                                        + "BW.W\\"
+                                                        + ".BW.\\"
+                                                        + "....\\");
+        gameLogic.setBoard(boardAfterBlackMove);
+        gameLogic.setWhoseTurn(PlayerColors.BLACK);
+
+        // Check for Ko at (2, 1) - where White would recapture
+        assertFalse(gameLogic.isKoSituation(2, 2), "The method should identify a Ko situation correctly");
     }
 
     @Test
@@ -161,6 +204,19 @@ public class GameLogicTest {
         // Check for Ko at (2, 2) - where White would recapture
         assertTrue(gameLogic.isKoSituation(2, 2), "The method should identify a Ko situation correctly");
     }    
+
+    @Test
+    public void testSuicideMoveOutOfBounds()
+    {
+        gameLogic = new GameLogic(2);
+        assertFalse(gameLogic.isSuicideMove(1000, -300));
+
+        gameLogic.setBoard(
+            decodeBoardString("WW\\"
+                            + "WW\\")
+        );
+        assertFalse(gameLogic.isSuicideMove(1, 1));
+    }
     
     @Test
     public void testSuicideMoveOne() {
@@ -203,6 +259,109 @@ public class GameLogicTest {
         gameLogic.setWhoseTurn(PlayerColors.BLACK);
         assertFalse(gameLogic.isSuicideMove(1, 1), "Placing a stone at (1, 1) should not be identified as a suicide move");
     }
+
+    @Test
+    void testEmptyBoardTerritory()
+    {
+        int[] territory = gameLogic.countTerritory();
+        assertEquals(0, territory[0], "No territory should be owned by Black on an empty board");
+        assertEquals(0, territory[1], "No territory should be owned by White on an empty board");
+    }
+
+    @Test
+    void testSimpleDividedTerritory()
+    {
+        gameLogic = new GameLogic(3);
+        String boardSetup =  "B..\\"
+                            + "...\\"
+                            + "..W";
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+
+        int[] territory = gameLogic.countTerritory();
+        assertEquals(0, territory[0], "Black should own 4 points of territory");
+        assertEquals(0, territory[1], "White should own 4 points of territory");
+    }
+
+    @Test
+    void testComplexDividedTerritory()
+    {
+        gameLogic = new GameLogic(3);
+        String boardSetup =  "...\\"
+                            + "BBB\\"
+                            + "W.W";
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+        
+        
+        int[] territory = gameLogic.countTerritory();
+        assertEquals(3, territory[0], "Black should own 2 points of territory");
+        assertEquals(0, territory[1], "White should own 3 points of territory");
+
+        gameLogic = new GameLogic(3);
+        boardSetup =  "...\\"
+                            + "WWW\\"
+                            + ".B.";
+        gameLogic.setBoard(decodeBoardString(boardSetup));
+        
+        
+        territory = gameLogic.countTerritory();
+        assertEquals(0, territory[0], "Black should own 2 points of territory");
+        assertEquals(3, territory[1], "White should own 3 points of territory");
+    }
+
+    @Test
+    void testCalculateScoreWithEqualTerritory() {
+        gameLogic.setCapturedStones(new int[]{0, 0}); // No captured stones
+        float[] scores = gameLogic.calculateScore(new int[]{10, 10}); // Equal territory
+
+        assertEquals(10, scores[0], "Black's score should be 10");
+        assertEquals(16.5, scores[1], "White's score should be 16.5 with Komi");
+    }
+
+    @Test
+    void testCalculateScoreWithCapturedStones() {
+        gameLogic.setCapturedStones(new int[]{3, 2}); // Black captured 3, White captured 2 stones
+        float[] scores = gameLogic.calculateScore(new int[]{10, 10}); // Equal territory
+
+        assertEquals(13, scores[0], "Black's score should be 13 (10 territory + 3 captured)");
+        assertEquals(18.5, scores[1], "White's score should be 18.5 (10 territory + 2 captured + 6.5 Komi)");
+    }
+
+    @Test
+    void testCalculateScoreWithUnequalTerritory() {
+        gameLogic.setCapturedStones(new int[]{0, 0}); // No captured stones
+        float[] scores = gameLogic.calculateScore(new int[]{15, 5}); // Unequal territory
+
+        assertEquals(15, scores[0], "Black's score should be 15");
+        assertEquals(11.5, scores[1], "White's score should be 11.5 with Komi");
+    }
+
+    @Test
+    void testCountCapturedStones() {
+        // Assuming a method to set captured stones, if not use appropriate approach to set them
+        gameLogic.setCapturedStones(new int[]{3, 5});
+        int[] capturedStones = gameLogic.countCapturedStones();
+        assertArrayEquals(new int[]{3, 5}, capturedStones, "Captured stones should match the set values");
+    }
+
+    @Test
+    void testGetWhoseTurn() {
+        // Assuming a method to set whose turn it is
+        gameLogic.setWhoseTurn(PlayerColors.WHITE);
+        assertEquals(PlayerColors.WHITE, gameLogic.getWhoseTurn(), "It should be White's turn");
+    }
+
+    @Test
+    void testGetPreviousBoard() {
+        // Assuming a method to set previous board state
+        Stone[][] expectedBoard = decodeBoardString("...\\"
+                                                    + "BBB\\"
+                                                    + "W.W");
+        gameLogic.setPreviousBoard(expectedBoard);
+        Stone[][] actualBoard = gameLogic.getPreviousBoard();
+        assertArrayEquals(expectedBoard, actualBoard, "Previous board should match the set board");
+    }
+
+
 
     private static Stone[][] decodeBoardString(String boardString)
     {
