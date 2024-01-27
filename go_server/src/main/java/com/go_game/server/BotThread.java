@@ -38,6 +38,14 @@ public class BotThread implements Runnable {
         // TODO: Handle socket closure properly
     }
 
+    //? For testing purposes
+    public BotThread(ClientConnection playerConnection, GameLogic gameLogic, int boardSize) throws IOException {
+        this.playerConnection = playerConnection;
+        this.gameLogic = gameLogic;
+        this.boardSize = boardSize;
+        gameID++;
+    }
+
     @Override
     public void run() {
         try {
@@ -57,12 +65,12 @@ public class BotThread implements Runnable {
         }
     }
 
-    private void handlePlayerMove() throws ClassNotFoundException, IOException {
+    public void handlePlayerMove() throws ClassNotFoundException, IOException {
         MoveMsg moveMsg = (MoveMsg) playerConnection.receiveMessage();
         processMove(moveMsg);
     }
 
-    private void handleBotMove() throws IOException {
+    public void handleBotMove() throws IOException {
         int attempts = 0;
         while (attempts < 10) {
             int x = random.nextInt(boardSize);
@@ -101,7 +109,7 @@ public class BotThread implements Runnable {
         }
     }
 
-    private boolean isMoveValid(int x, int y) throws IOException {
+    public boolean isMoveValid(int x, int y) throws IOException {
         if (!gameLogic.isInBoundsAndEmptySpace(x, y) ||
             gameLogic.isKoSituation(x, y) ||
             gameLogic.isSuicideMove(x, y)) {
@@ -114,7 +122,7 @@ public class BotThread implements Runnable {
         gameLogic.setWhoseTurn(gameLogic.getWhoseTurn().toggle());
     }
 
-    private void sendMessage(AbstractMessage message) throws IOException {
+    public void sendMessage(AbstractMessage message) throws IOException {
         logger.log("Sending message: " + message.getType());
         playerConnection.sendMessage(message);
     }
@@ -154,5 +162,11 @@ public class BotThread implements Runnable {
         }
 
     }
+
+    public void setGameOver(boolean gameOver)
+    {
+        this.gameOver = gameOver;
+    }
+
 }
 
