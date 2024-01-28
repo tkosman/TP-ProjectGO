@@ -38,13 +38,6 @@ public class App extends Application {
 
         stage.show();
 
-        // try {
-        //     Client client = new Client();
-        // } catch (ClassNotFoundException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
-
         setRoot("login", null, null);
     }
 
@@ -68,11 +61,6 @@ public class App extends Application {
         fadeTransition.setFromValue(0.0);
         fadeTransition.setToValue(1.0);
         fadeTransition.play();
-    
-        // Pass the client instance if the controllers are MenuController and GameController
-        if (currentController instanceof MenuController && nextController instanceof GameController) {
-            ((GameController) nextController).setClient(((MenuController) currentController).getClient());
-        }
     }
 
     private static Parent loadFXML(String fxml) throws IOException {

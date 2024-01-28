@@ -4,32 +4,22 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.sql.Timestamp;
-import java.util.Scanner;
-
-import shared.enums.BoardSize;
-import shared.enums.GameMode;
-import shared.enums.MessageType;
-import shared.enums.PlayerColors;
-import shared.enums.Stone;
-import shared.messages.AbstractMessage;
-import shared.messages.BoardStateMsg;
-import shared.messages.ClientInfoMsg;
-import shared.messages.GameJoinedMsg;
-import shared.messages.GameOverMsg;
-import shared.messages.IndexSetMsg;
-import shared.messages.MoveMsg;
-import shared.messages.MoveNotValidMsg;
-import shared.messages.OkMsg;
-import shared.messages.PlayerPassedMsg;
 
 
-public class Client implements Runnable
-{
+public class Client {
     private Socket socket;
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
+    private Game game;
     
+    public Game getGame() {
+        return this.game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
     public Client(Socket socket) throws IOException, ClassNotFoundException
     {
         this.socket = socket;
@@ -46,42 +36,36 @@ public class Client implements Runnable
 
     public void closeConnection() throws IOException
     {
-        socket.close();
-        outputStream.close();
-        inputStream.close();
+        this.socket.close();
+        this.outputStream.close();
+        this.inputStream.close();
     }
     
     public void sendMessage(Object message) throws IOException
     {
-        outputStream.writeObject(message);
-        outputStream.reset();
+        this.outputStream.writeObject(message);
+        this.outputStream.reset();
     }
     
     public Object receiveMessage() throws IOException, ClassNotFoundException
     {
-        return inputStream.readObject();
+        return this.inputStream.readObject();
     }
 
     public Socket getSocket()
     {
-        return socket;
+        return this.socket;
     }
 
     public ObjectOutputStream getOutputStream()
     {
-        return outputStream;
+        return this.outputStream;
     }
 
     public ObjectInputStream getInputStream()
     {
-        return inputStream;
+        return this.inputStream;
     }
-
-    @Override
-    public void run() {
-        System.out.println("running");
-    }
-
 
     // private final static String HOST = "localhost";//? in future extended not only to localhost
     // private final static int PORT = 4444;

@@ -3,10 +3,12 @@ package com.go_game.client;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 
 import com.go_game.client.connection.Client;
+import com.go_game.client.connection.Game;
 
 import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
@@ -17,6 +19,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -128,15 +131,17 @@ public class MenuController {
             this.client = new Client(new Socket(HOST, PORT));
             this.client.sendMessage(new ClientInfoMsg(bs, GameMode.MULTI_PLAYER));
             
-            Platform.runLater(() -> gameModeAlert());
+            Platform.runLater(() -> gameModeAlert(bs));
         } catch (IOException | ClassNotFoundException  e) {
             e.printStackTrace();
         }
     }
 
 
-    private void gameModeAlert() {
-        Alert alert = new Alert(AlertType.NONE, "", ButtonType.CLOSE);
+    private void gameModeAlert(BoardSize bs) {
+        ButtonType cancelButton = new ButtonType("cancel", ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(AlertType.NONE, "", cancelButton);
         alert.initStyle(StageStyle.UNDECORATED);
         alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
         alert.getDialogPane().setPrefSize(300, 300);
@@ -169,11 +174,6 @@ public class MenuController {
         botButton.setMaxWidth(Double.MAX_VALUE);
 
         alert.setOnCloseRequest(event -> {
-            try {
-                this.client.closeConnection();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             alert.setResult(ButtonType.CANCEL);
         });
 
@@ -196,6 +196,8 @@ public class MenuController {
                         GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) getClient().receiveMessage();
                         System.out.println("Game ID: " + gameJoinedMsg.getGameID());
 
+                        getClient().setGame(new Game(bs, gameJoinedMsg.getGameID(), gameJoinedMsg.getPlayerColors()));
+
                         latch.countDown();
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
@@ -213,7 +215,7 @@ public class MenuController {
 
                     if (!alert.getResult().equals(ButtonType.CANCEL)) {
                         try {
-                            App.setRoot("game", this, new GameController());
+                            App.setRoot("game", this, new GameController(this.client));
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -235,7 +237,7 @@ public class MenuController {
             if (!alert.getResult().equals(ButtonType.CANCEL)) {
                 try {
                     this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
-                    App.setRoot("game", this, new GameController());
+                    App.setRoot("game", this, new GameController(this.client));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -250,7 +252,17 @@ public class MenuController {
 
         alert.getDialogPane().setContent(gameModeSelectVBox);
 
-        alert.showAndWait();
+
+        // TODO: to make it exit the queue when canceling
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent() && result.get() == cancelButton) {
+            try {
+                this.client.closeConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private Node matchmakingAlert() {

@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.go_game.client.connection.Client;
-import com.go_game.client.game_model.ColorEnum;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -28,14 +27,25 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 import javafx.stage.StageStyle;
+import shared.enums.BoardSize;
+import shared.enums.MessageType;
+import shared.enums.PlayerColors;
+import shared.enums.Stone;
+import shared.messages.AbstractMessage;
+import shared.messages.BoardStateMsg;
+import shared.messages.MoveMsg;
 
 public class GameController {
-    private Client client;
-    
-    public void setClient(Client client) {
-        this.client = client;
-    }
+    private static final int CIRCLE_RADIUS = 15;
+    private static final int SPACING = 5;
+    private int GRID_SIZE;
 
+    private Client client;
+    private BoardStone[][] stoneGrid;
+
+
+    private PlayerColors currentPlayerColor;
+    
     @FXML
     private ResourceBundle resources;
 
@@ -72,6 +82,7 @@ public class GameController {
     @FXML
     private Button resignButton;
 
+
     @FXML
     void initialize() {
         assert boardAnchorPane != null : "fx:id=\"boardAnchorPane\" was not injected: check your FXML file 'game.fxml'.";
@@ -86,26 +97,27 @@ public class GameController {
         assert resignButton != null : "fx:id=\"resignButton\" was not injected: check your FXML file 'game.fxml'.";
 
 
-        int gridSize = 9;
-        int circleRadius = 15;
-        int spacing = 5;
+        GRID_SIZE = this.client.getGame().getX();
+        this.currentPlayerColor = this.client.getGame().getPlayerColor();
 
-        boardHBox.setSpacing(spacing);
+        stoneGrid = new BoardStone[GRID_SIZE + 1][GRID_SIZE + 1];
+
+        boardHBox.setSpacing(SPACING);
         boardHBox.setAlignment(Pos.CENTER);
 
-        for (int i = 0; i <= gridSize; i++) {
+        for (int i = 0; i <= GRID_SIZE; i++) {
             VBox vBox = new VBox();
             vBox.setAlignment(Pos.CENTER);
-            vBox.setSpacing(spacing);
+            vBox.setSpacing(SPACING);
             boardHBox.getChildren().add(vBox);
         }
 
-        ((VBox) boardHBox.getChildren().get(0)).getChildren().add(new Circle(circleRadius, Color.TRANSPARENT));
+        ((VBox) boardHBox.getChildren().get(0)).getChildren().add(new Circle(CIRCLE_RADIUS, Color.TRANSPARENT));
         ((Shape) ((VBox) boardHBox.getChildren().get(0)).getChildren().get(0)).setStrokeWidth(2);
         
 
-        for (int i = 1; i <= gridSize; i++) {
-            Circle circleX = new Circle(circleRadius);
+        for (int i = 1; i <= GRID_SIZE; i++) {
+            Circle circleX = new Circle(CIRCLE_RADIUS);
             circleX.setStroke(Color.TRANSPARENT);
             circleX.setOpacity(0.0);
             circleX.setStrokeWidth(2);
@@ -116,7 +128,7 @@ public class GameController {
             coordinateX.setAlignment(Pos.CENTER);
             ((VBox) boardHBox.getChildren().get(i)).getChildren().add(coordinateX);
         
-            Circle circleY = new Circle(circleRadius);
+            Circle circleY = new Circle(CIRCLE_RADIUS);
             circleY.setStroke(Color.TRANSPARENT);
             circleY.setOpacity(0.0);
             circleY.setStrokeWidth(2);
@@ -128,9 +140,10 @@ public class GameController {
             ((VBox) boardHBox.getChildren().get(0)).getChildren().add(coordinateY);
         }
 
-        for (int i = 1; i <= gridSize; i++) {
-            for (int j = 1; j <= gridSize; j++) {
-                Circle circle = new Circle(circleRadius);
+        for (int i = 1; i <= GRID_SIZE; i++) {
+            for (int j = 1; j <= GRID_SIZE; j++) {
+                BoardStone circle = new BoardStone(CIRCLE_RADIUS, i, j);
+
                 circle.getStyleClass().add("game-circle");
                 circle.setOnMouseClicked(createCircleClickHandler(circle));
                 circle.hoverProperty().addListener(createHoverChangeListener(circle, j));
@@ -142,19 +155,67 @@ public class GameController {
         }
     }
 
-    private ColorEnum currentPlayerColor = ColorEnum.BLACK;
+    
+    protected void setBoard(Stone[][] state) {
+        Platform.runLater(() -> {
+            for (int i = 1; i <= GRID_SIZE; i++) {
+                for (int j = 1; j <= GRID_SIZE; j++) {
+                    Color color;
 
-    private EventHandler<MouseEvent> createCircleClickHandler(Circle circle) {
+                    if (this.client.getGame().getState()[i][j] == Stone.BLACK) color = Color.BLACK;
+                    else if (this.client.getGame().getState()[i][j] == Stone.BLACK) color = Color.WHITE;
+                    else color = Color.web("#3E3E3E");
+
+                    ((Circle) ((VBox) boardHBox.getChildren().get(i)).getChildren().get(j)).setFill(color);
+                }
+            }
+        });
+    }
+
+
+    public GameController(Client client) {
+        this.client = client;
+    }
+
+    // changing stone color
+    private EventHandler<MouseEvent> createCircleClickHandler(BoardStone circle) {
         return event -> {
-            if (!circle.getFill().equals(Color.WHITE) && !circle.getFill().equals(Color.BLACK)) {
-                circle.setFill(currentPlayerColor == ColorEnum.BLACK ? Color.BLACK : Color.WHITE);
-                currentPlayerColor = currentPlayerColor == ColorEnum.BLACK ? ColorEnum.WHITE : ColorEnum.BLACK;
+            if (circle.getStoneColor().equals(Stone.EMPTY)) {
+                try {
+                    this.client.sendMessage(new MoveMsg(circle.getX(), circle.getY()));
+
+
+                    circle.setFill(currentPlayerColor == PlayerColors.BLACK ? Color.BLACK : Color.WHITE);
+                    currentPlayerColor.getOpposite();
+
+                    AbstractMessage message = new AbstractMessage() {};
+                    
+                    try {
+                        message = (AbstractMessage) client.receiveMessage();
+                        // TODO: add options for game over and shit went wrong
+                        if (message.getType() == MessageType.BOARD_STATE) {
+                            client.getGame().setState(((BoardStateMsg) message).getBoardState());
+
+                            setBoard(client.getGame().getState());
+                        } 
+                        else if (message.getType() == MessageType.GAME_OVER) {
+                            // TODO: implement game over
+                            System.out.println("================= GAME OVER =================");
+                        }
+                    } catch (ClassNotFoundException | IOException e) {
+                        e.printStackTrace();
+                    }
+                    
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             event.consume();
         };
     }
 
+    // hover effect
     private ChangeListener<Boolean> createHoverChangeListener(Circle circle, int y) {
         return (ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
             if (newValue) {
@@ -195,10 +256,10 @@ public class GameController {
     void resign() {
         // TODO: ofer resignation to oponent
 
-        gameModeAlert();
+        resignAlert();
     }
 
-    private void gameModeAlert() {
+    private void resignAlert() {
         Alert alert = new Alert(AlertType.NONE, "", ButtonType.CLOSE);
         alert.initStyle(StageStyle.UNDECORATED);
         alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
@@ -217,8 +278,17 @@ public class GameController {
 
     @FXML
     void pass() {
-        currentPlayerColor = currentPlayerColor == ColorEnum.BLACK ? ColorEnum.WHITE : ColorEnum.BLACK;
+        if (currentPlayerColor.equals(this.client.getGame().getPlayerColor())) {
+            try {
+                this.client.sendMessage(new MoveMsg(true));
+                switchColors();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-        // TODO: pass a turn
+    private void switchColors() {
+        currentPlayerColor = currentPlayerColor.getOpposite();
     }
 }
