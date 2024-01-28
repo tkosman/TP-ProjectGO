@@ -25,8 +25,9 @@ jobs:
     - name: Build and Test shared
       run: mvn -B clean install test --file shared/pom.xml
 
+    - name: Build and Test go_server
+      run: mvn -B clean install test --file go_server/pom.xml
+
     - name: Build and Test go_client
       run: mvn -B clean install test --file go_client/pom.xml
 
-    - name: Build and Test go_server
-      run: mvn -B clean install test --file go_server/pom.xml
