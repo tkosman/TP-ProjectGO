@@ -8,23 +8,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
 import shared.messages.BoardStateMsg;
-import shared.messages.GameJoinedMsg;
 import shared.messages.GameOverMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.PlayerPassedMsg;
 import shared.messages.ResultsNegotiationMsg;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 
 @ExtendWith(MockitoExtension.class)
 public class BotThreadTest {

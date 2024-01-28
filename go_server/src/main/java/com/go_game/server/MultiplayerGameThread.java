@@ -10,7 +10,6 @@ import shared.messages.GameJoinedMsg;
 import shared.messages.GameOverMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
-import shared.messages.OkMsg;
 import shared.messages.PlayerPassedMsg;
 import shared.messages.ResultsNegotiationMsg;
 import shared.messages.SthWentWrongMsg;
@@ -151,13 +150,15 @@ public class MultiplayerGameThread implements Runnable
         {
             logger.log("Player BLACK playing");
             moveMsg = (MoveMsg) player1Connection.receiveMessage();
-            OkMsg okMsg = (OkMsg) player2Connection.receiveMessage();
+            //? Should receive OkMsg
+            player2Connection.receiveMessage();
         }
         else
         {
             logger.log("Player WHITE playing");
             moveMsg = (MoveMsg) player2Connection.receiveMessage();
-            OkMsg okMsg = (OkMsg) player1Connection.receiveMessage();
+            //? Should receive OkMsg
+            player1Connection.receiveMessage();
         }
         return moveMsg;
     }
