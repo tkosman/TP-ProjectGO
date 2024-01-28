@@ -13,6 +13,7 @@ import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
 import shared.messages.PlayerPassedMsg;
 import shared.messages.ResultsNegotiationMsg;
+import shared.messages.SthWentWrongMsg;
 import shared.other.Logger;
 
 
@@ -44,7 +45,7 @@ public class MultiplayerGameThread implements Runnable
 
     private Logger logger = new Logger();
 
-    public MultiplayerGameThread(ClientConnection player1Connection, ClientConnection player2Connection, int boardSize) throws IOException
+    public MultiplayerGameThread(ClientConnection player1Connection, ClientConnection player2Connection, int boardSize)
     {
 
         this.player1Connection = player1Connection;
@@ -53,16 +54,12 @@ public class MultiplayerGameThread implements Runnable
         gameLogic = new GameLogic(boardSize);
         gameID++;
 
-        player1Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
-        player2Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.WHITE, gameLogic.getWhoseTurn()));
 
-
-        Thread fred = new Thread(this);
-        fred.start();
-
-        //TODO: close sockets
-        // player1Connection.getSocket().close();
-        // player2Connection.getSocket().close();
+        if(handshake())
+        {
+            Thread fred = new Thread(this);
+            fred.start();
+        }
     }
 
     /**
@@ -71,6 +68,9 @@ public class MultiplayerGameThread implements Runnable
      * Receives moves from players, processes them, and updates the game state accordingly.
      * Sends messages to players to inform them about the game progress.
      * Handles exceptions related to I/O and class loading.
+     *
+     * @throws IOException if an I/O error occurs during communication with the players.
+     * @throws ClassNotFoundException if a class cannot be found during deserialization of messages.
      */
     @Override
     public void run()
@@ -125,10 +125,11 @@ public class MultiplayerGameThread implements Runnable
 
             }
         }
-        //TODO: handle this exception correctly
         catch (IOException | ClassNotFoundException e)
         {
-            System.out.println("Error in MultiplayerGameThread: " + e.getMessage());
+            System.out.println("ERROR: SOMETHING WENT WRONG IN GAME " + gameID + " FLOW");
+            closeConnection(player1Connection, "Something went wrong in game flow");
+            closeConnection(player2Connection, "Something went wrong in game flow");
         }
     }
 
@@ -305,27 +306,57 @@ public class MultiplayerGameThread implements Runnable
         gameLogic.setWhoseTurn(gameLogic.getWhoseTurn().toggle());
     }
 
-    //! for debugging purposes
-    // private static void printBoard(Stone[][] board) {
-    //     int boardSize = board.length;
-    //     for (int y = 0; y < boardSize; y++) {
-    //         for (int x = 0; x < boardSize; x++) {
-    //             switch (board[x][y]) {
-    //                 case BLACK:
-    //                     System.out.print("B ");
-    //                     break;
-    //                 case WHITE:
-    //                     System.out.print("W ");
-    //                     break;
-    //                 default:
-    //                     System.out.print(". ");
-    //                     break;
-    //             }
-    //         }
-    //         System.out.println();
-    //     }
-    //     System.out.println();
-    //     System.out.println();
-    // }
-    //! END for debugging purposes
+
+    /**
+     * Sends a message to both players when the game starts.
+     * 
+     * Used messages:
+     * - GameJoinedMsg()    - sent to both players when the game starts
+     * 
+     * @return true if the handshake was successful, false otherwise.
+     */
+    private boolean handshake()
+    {
+        try 
+        {
+            player1Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
+        } 
+        catch (IOException e) 
+        {
+            System.out.println("ERROR: PLAYER BLACK DISCONNECTED, GAME " + gameID + " ENDED");
+            closeConnection(player2Connection, "Player 1 connection error");
+            return false;
+        }
+        try 
+        {
+            player2Connection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.WHITE, gameLogic.getWhoseTurn()));
+        }
+        catch (IOException e) 
+        {
+            System.out.println("ERROR: PLAYER WHITE DISCONNECTED, GAME " + gameID + " ENDED");
+            closeConnection(player1Connection, "Player 1 connection error");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Closes the connection with the given client and prints the given error message.
+     * 
+     * Used messages:
+     * - SthWentWrongMsg()  - sent to the client when the connection is closed
+     * 
+     * @param connection    ClientConnection object representing the connection to be closed.
+     * @param errorMessage  String object representing the error message to be printed.
+     */
+    private void closeConnection(ClientConnection connection, String errorMessage)
+    {
+        try
+        {
+            connection.sendMessage(new SthWentWrongMsg(errorMessage));
+        } 
+        catch (IOException e)
+        {} 
+    }
 }
