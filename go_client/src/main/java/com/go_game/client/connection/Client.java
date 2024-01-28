@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Timestamp;
+import java.util.Random;
 import java.util.Scanner;
 
 import shared.enums.BoardSize;
@@ -42,18 +43,18 @@ public class Client implements Runnable
     private Stone[][] board; //! for debugging purposes
 
 
-    public static void main(String[] args) throws ClassNotFoundException
+    public static void main(String[] args) throws ClassNotFoundException, IOException
     {
         scanner = new Scanner(System.in);
         new Client();
     }
 
-    public Client() throws ClassNotFoundException
+    public Client() throws ClassNotFoundException, IOException
     {
         establishServerConnection();
     }
 
-    private void establishServerConnection() throws ClassNotFoundException
+    private void establishServerConnection() throws ClassNotFoundException, IOException
     {
         try
         {
@@ -69,7 +70,7 @@ public class Client implements Runnable
             System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
             //! 3 OUT
-            toServer.writeObject(new ClientInfoMsg(GameMode.REPLAY));
+            toServer.writeObject(new ClientInfoMsg(BoardSize.NINE_X_NINE, GameMode.MULTI_PLAYER));
             toServer.reset();
 
             //! 4 IN
@@ -86,6 +87,7 @@ public class Client implements Runnable
         }
         catch (IOException ex) {
             System.err.println(ex);
+            socket.close();
         }
     }
     @Override
@@ -119,7 +121,16 @@ public class Client implements Runnable
 
             }
         }
-        catch (IOException | ClassNotFoundException e) { e.printStackTrace(); }
+        catch (IOException | ClassNotFoundException e)
+        { 
+            e.printStackTrace(); 
+            try {
+                socket.close();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        }
     }   
 
     private void receiveInfoFromServer() throws IOException, ClassNotFoundException 
@@ -169,6 +180,13 @@ public class Client implements Runnable
             System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + description);
             // System.exit(0);
         }
+        else if (message.getType() == MessageType.STH_WENT_WRONG)
+        {
+            //TODO: close socket and exit
+            System.out.println("GREAT ERROR");
+            socket.close();
+            System.exit(0);
+        }
         else
         {
             //? Something went wrong, simply won't happen
@@ -209,16 +227,26 @@ public class Client implements Runnable
     private MoveMsg getPlayerMove() {
         //TODO: !DOBREK! here you should get the move from the player return it as a MoveMsg
 
-        System.out.println("Do you want to pass? (y/n)");
-        String pass = scanner.nextLine();
-        if (pass.equals("y")) {
-            return new MoveMsg(true);
+        // System.out.println("Do you want to pass? (y/n)");
+        // String pass = scanner.nextLine();
+        // if (pass.equals("y")) {
+        //     return new MoveMsg(true);
+        // }
+        // System.out.print("Enter x coordinate: ");
+        // int x = scanner.nextInt();
+        // System.out.print("Enter y coordinate: ");
+        // int y = scanner.nextInt();
+        // scanner.nextLine();
+
+        try {
+            Thread.sleep(1000); // Sleep for 1 second
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        System.out.print("Enter x coordinate: ");
-        int x = scanner.nextInt();
-        System.out.print("Enter y coordinate: ");
-        int y = scanner.nextInt();
-        scanner.nextLine();
+
+        Random random = new Random();
+        int x = random.nextInt(9); // Generate random x coordinate between 0 and 8
+        int y = random.nextInt(9); // Generate random y coordinate between 0 and 8
 
         return new MoveMsg(x, y);
     }

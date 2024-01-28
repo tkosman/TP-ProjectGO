@@ -17,6 +17,8 @@ public class Server
     
     ClientConnection clientConnection;
     ClientConnection waitingPlayer9x9Connection;
+    ClientConnection waitingPlayer13x13Connection;
+    ClientConnection waitingPlayer19x19Connection;
 
     public static void main(String[] args)
     {
@@ -35,14 +37,14 @@ public class Server
                 //? Wait for a new player to join
                 clientConnection = new ClientConnection(serverSocket.accept());
 
-                //! 2 OUT
-                clientConnection.sendMessage(new IndexSetMsg(player_index));
-                player_index++; //? Increment player index
-
-                System.out.println(new Date() + "\nPlayer joined session with IP address " + clientConnection.getSocket().getInetAddress().getHostAddress() + "\n");
-
                 try
                 { 
+                    //! 2 OUT
+                    clientConnection.sendMessage(new IndexSetMsg(player_index));
+                    player_index++; //? Increment player index
+
+                    System.out.println(new Date() + "\nPlayer joined session with IP address " + clientConnection.getSocket().getInetAddress().getHostAddress() + "\n");
+
                     //! 3 IN
                     ClientInfoMsg newPlayerInfo = (ClientInfoMsg)clientConnection.receiveMessage();
                     System.out.println(newPlayerInfo);
@@ -56,7 +58,7 @@ public class Server
                     else if (gameMode == GameMode.BOT)
                     {
                         System.out.println("BOT");
-                        //TODO: start a new thread for bot
+                        new BotThread(clientConnection, newPlayerInfo.getBoardSize().toInt());
                     }
                     else if (gameMode == GameMode.MULTI_PLAYER)
                     {
@@ -70,30 +72,55 @@ public class Server
                             }
                             else
                             {
-                                new MultiplayerGameThread(clientConnection, waitingPlayer9x9Connection, 9);
+                                new MultiplayerGameThread(clientConnection, waitingPlayer9x9Connection, boardSize.toInt());
                                 waitingPlayer9x9Connection = null;
                             }
 
                         }
                         else if(boardSize == BoardSize.THIRTEEN_X_THIRTEEN)
                         {
-                            System.out.println("THIRTEEN_X_THIRTEEN");
-                            assert false : "To be implemented"; //TODO: implement
+                            if(waitingPlayer13x13Connection == null)
+                            {
+                                waitingPlayer13x13Connection = new ClientConnection(clientConnection.getSocket(), clientConnection.getOutputStream(), clientConnection.getInputStream());
+                            }
+                            else
+                            {
+                                new MultiplayerGameThread(clientConnection, waitingPlayer13x13Connection, boardSize.toInt());
+                                waitingPlayer13x13Connection = null;
+                            }
                         }
                         else if(boardSize == BoardSize.NINETEEN_X_NINETEEN)
                         {
-                            System.out.println("NINETEEN_X_NINETEEN");
-                            assert false : "To be implemented"; //TODO: implement
+                            if(waitingPlayer19x19Connection == null)
+                            {
+                                waitingPlayer19x19Connection = new ClientConnection(clientConnection.getSocket(), clientConnection.getOutputStream(), clientConnection.getInputStream());
+                            }
+                            else
+                            {
+                                new MultiplayerGameThread(clientConnection, waitingPlayer19x19Connection, boardSize.toInt());
+                                waitingPlayer19x19Connection = null;
+                            }
                         }
                         else { assert false : "Unknown board size"; }
                     }
                     else { assert false : "Unknown game mode"; }
 
                 }
-                catch (ClassNotFoundException e) { e.printStackTrace(); }
+                catch (ClassNotFoundException e) 
+                {
+                    System.out.println("Wrong message type received, waited for ClientInfoMsg!");
+                    e.printStackTrace(); 
+                }
+                catch (IOException e) 
+                {
+                    System.out.println("Player disconnected or coudn't send message.");
+                    e.printStackTrace();
+                }
             }
-        } catch (IOException ex) {
-            System.out.println("Server exception: " + ex.getMessage());
+        }
+        catch (IOException ex)
+        {
+            System.out.println("Could not start server.");
             ex.printStackTrace();
         }
     }
