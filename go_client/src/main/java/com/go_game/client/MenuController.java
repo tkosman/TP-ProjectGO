@@ -224,7 +224,7 @@ public class MenuController {
 
                     if (!alert.getResult().equals(ButtonType.CANCEL)) {
                         try {
-                            App.setRoot("game", this, new GameController(this.client));
+                            App.setRoot("game", this, new MultiplayerGameController(this.client));
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -246,7 +246,7 @@ public class MenuController {
             if (!alert.getResult().equals(ButtonType.CANCEL)) {
                 try {
                     this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
-                    App.setRoot("game", this, new GameController(this.client));
+                    App.setRoot("game", this, new BotGameController(this.client));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
