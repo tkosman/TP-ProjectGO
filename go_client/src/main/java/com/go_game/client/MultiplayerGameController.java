@@ -345,7 +345,7 @@ public class MultiplayerGameController {
 
     private void switchTurns() {
         //TODO: check implementation for bot
-        System.out.println("DUPA");
+        //! IMPORTANT: uncomment this
         //currentPlayerColor = currentPlayerColor.getOpposite();
 
     }
