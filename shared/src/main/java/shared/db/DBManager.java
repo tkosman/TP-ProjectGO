@@ -1,4 +1,4 @@
-package com.go_game.server.db;
+package shared.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

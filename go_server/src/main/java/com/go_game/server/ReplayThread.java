@@ -6,8 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.go_game.server.db.DBManager;
-
+import shared.db.DBManager;
 import shared.messages.IndexSetMsg;
 import shared.messages.ReplayFetchMsg;
 import shared.messages.StringMsg;

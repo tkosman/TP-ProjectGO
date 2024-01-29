@@ -1,13 +1,16 @@
 package shared.messages;
 
+import shared.db.DBQueuer;
 import shared.enums.MessageType;
 import shared.enums.Stone;
 
-//TODO: add score
 public class BoardStateMsg extends AbstractMessage 
 {
     private Stone[][] boardState;
     private int[] score;
+
+    DBQueuer dbQueuer;
+    
 
     public BoardStateMsg(Stone[][] boardState, int[] score)
     {

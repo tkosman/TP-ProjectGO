@@ -1,4 +1,5 @@
-package com.go_game.server.db;
+package shared.db;
+
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +13,7 @@ public class DBQueuer {
     public DBQueuer(DBManager dbManager) {
         this.dbManager = dbManager;
         this.queue = new ConcurrentLinkedQueue<>();
-        this.executorService = Executors.newSingleThreadExecutor(); // Single thread to process the queue
+        this.executorService = Executors.newSingleThreadExecutor();
         processQueue();
     }
 
