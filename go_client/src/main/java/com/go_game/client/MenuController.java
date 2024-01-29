@@ -128,8 +128,11 @@ public class MenuController {
     
     private void startXxXGame(BoardSize bs) {
         try {
+            //! out 1
             this.client = new Client(new Socket(HOST, PORT));
-            this.client.sendMessage(new ClientInfoMsg(bs, GameMode.MULTI_PLAYER));
+
+            // IndexSetMsg msg = (IndexSetMsg) this.client.receiveMessage();
+            
             
             Platform.runLater(() -> gameModeAlert(bs));
         } catch (IOException | ClassNotFoundException  e) {
@@ -190,9 +193,15 @@ public class MenuController {
                 @Override
                 public void run() {
                     try {
+                        //! 2 in
                         IndexSetMsg playerIndex = (IndexSetMsg) getClient().receiveMessage();
                         System.out.println("You are player " + playerIndex.getIndex() + "\n");
 
+                        //! 3 out
+                        getClient().sendMessage(new ClientInfoMsg(bs, GameMode.MULTI_PLAYER));
+
+
+                        //! 4 in
                         GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) getClient().receiveMessage();
                         System.out.println("Game ID: " + gameJoinedMsg.getGameID());
 

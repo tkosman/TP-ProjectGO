@@ -43,6 +43,7 @@ public class GameController {
     private int GRID_SIZE;
 
     private Client client;
+
     private BoardStone[][] stoneGrid;
 
 
@@ -156,15 +157,45 @@ public class GameController {
             }
         }
 
+        //! 1 out white
         if (this.client.getGame().getPlayerColor() == PlayerColors.WHITE) {
             try {
 				this.client.sendMessage(new OkMsg());
+
+                // BoardStateMsg firstBS = (BoardStateMsg) this.client.receiveMessage();
+                // client.getGame().setState(firstBS.getBoardState());
+                // setBoard(firstBS.getBoardState());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
         }
+
+        Thread fred = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                while (true) {
+                    if (currentPlayerColor == getClient().getGame().getPlayerColor()) {
+                        //TODO: wait for player to click
+                        //TODO: receive board state
+                    }
+                    else
+                    {
+                        //TODO: send ok msg imediatelly
+                        //TODO: receive board state
+                    }
+                }
+            }
+            
+        });
+        fred.start();
     }
 
+    
+
+    public Client getClient() {
+        return client;
+    }
     
     protected void setBoard(Stone[][] state) {
         Platform.runLater(() -> {
@@ -172,8 +203,8 @@ public class GameController {
                 for (int j = 1; j <= GRID_SIZE; j++) {
                     Color color;
 
-                    if (this.client.getGame().getState()[j - 1][i - 1] == Stone.BLACK) color = Color.BLACK;
-                    else if (this.client.getGame().getState()[j - 1][i - 1] == Stone.BLACK) color = Color.WHITE;
+                    if (this.client.getGame().getState()[i - 1][j - 1] == Stone.BLACK) color = Color.BLACK;
+                    else if (this.client.getGame().getState()[i - 1][j - 1] == Stone.BLACK) color = Color.WHITE;
                     else color = Color.web("#3E3E3E");
 
                     ((Circle) ((VBox) boardHBox.getChildren().get(i)).getChildren().get(j)).setFill(color);
@@ -192,31 +223,30 @@ public class GameController {
         return event -> {
             if (circle.getStoneColor().equals(Stone.EMPTY)) {
                 try {
-                    boolean myTurn = true;
-                    while (myTurn) {
-                        if (currentPlayerColor == this.client.getGame().getPlayerColor()) {
-                            this.client.sendMessage(new MoveMsg(circle.getX(), circle.getY()));
-    
-                            AbstractMessage responseForMove = (AbstractMessage) this.client.receiveMessage();
-                            if (responseForMove.getType() == MessageType.MOVE_NOT_VALID) {
-                                System.out.println(((MoveNotValidMsg) responseForMove).getDescription());
-                                myTurn = false;
-                            } 
-                            else if (responseForMove.getType() == MessageType.BOARD_STATE) {
-                                Platform.runLater(() -> {
-                                    circle.setFill(this.client.getGame().getPlayerColor() == PlayerColors.BLACK ? Color.BLACK : Color.WHITE);
-                                });
-                                
-                                currentPlayerColor = currentPlayerColor.getOpposite();
-    
-                                client.getGame().setState(((BoardStateMsg) responseForMove).getBoardState());
-                                setBoard(client.getGame().getState());
-                                myTurn = false;
-                            }
-                            // TODO: game over
-                        } else {
-                            myTurn = false;
+                    if (currentPlayerColor == this.client.getGame().getPlayerColor()) {
+                        System.out.println("send move message");
+                        this.client.sendMessage(new MoveMsg(circle.getX(), circle.getY()));
+
+                        System.out.println("recive response with board state");
+                        AbstractMessage responseForMove = (AbstractMessage) this.client.receiveMessage();
+                        if (responseForMove.getType() == MessageType.MOVE_NOT_VALID) {
+                            System.out.println(((MoveNotValidMsg) responseForMove).getDescription());
+                        } 
+                        else if (responseForMove.getType() == MessageType.BOARD_STATE) {
+                            Platform.runLater(() -> {
+                                circle.setFill(this.client.getGame().getPlayerColor() == PlayerColors.BLACK ? Color.BLACK : Color.WHITE);
+                            });
+                            
+                            currentPlayerColor = currentPlayerColor.getOpposite();
+
+                            client.getGame().setState(((BoardStateMsg) responseForMove).getBoardState());
+                            setBoard(client.getGame().getState());
+                            
+                            System.out.println("send ok message");
+                            client.sendMessage(new OkMsg());
+
                         }
+                        // TODO: game over
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
