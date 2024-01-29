@@ -9,6 +9,7 @@ import com.go_game.client.connection.Client;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -27,15 +28,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 import javafx.stage.StageStyle;
-import shared.enums.BoardSize;
 import shared.enums.MessageType;
 import shared.enums.PlayerColors;
 import shared.enums.Stone;
 import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
+import shared.messages.GameOverMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
+import shared.messages.PlayerPassedMsg;
 
 public class GameController {
     private static final int CIRCLE_RADIUS = 15;
@@ -44,7 +46,12 @@ public class GameController {
 
     private Client client;
 
-    private BoardStone[][] stoneGrid;
+    private volatile BoardStone[][] stoneGrid;
+
+    private volatile boolean stoneClicked = false;
+    // private Point moveCord;
+    private volatile int moveCordX;
+    private volatile int moveCordY;
 
 
     private PlayerColors currentPlayerColor = PlayerColors.BLACK;
@@ -54,9 +61,6 @@ public class GameController {
 
     @FXML
     private URL location;
-
-    @FXML
-    private AnchorPane boardAnchorPane;
 
     @FXML
     private HBox boardHBox;
@@ -74,10 +78,22 @@ public class GameController {
     private ListView<?> moveBoardListView;
 
     @FXML
+    private Label oponentColorLabel;
+
+    @FXML
+    private Label oponentNameLabel;
+
+    @FXML
     private Label oponentScoreLabel;
 
     @FXML
     private Button passButton;
+
+    @FXML
+    private Label playerColorLabel;
+
+    @FXML
+    private Label playerNameLabel;
 
     @FXML
     private Label playerScoreLabel;
@@ -85,22 +101,47 @@ public class GameController {
     @FXML
     private Button resignButton;
 
+    @FXML
+    private Label statusLabel;
+
+    @FXML
+    void exit(ActionEvent event) {
+
+    }
+
+    @FXML
+    void pass(ActionEvent event) {
+
+    }
+
+    @FXML
+    void resign(ActionEvent event) {
+
+    }
 
     @FXML
     void initialize() {
-        assert boardAnchorPane != null : "fx:id=\"boardAnchorPane\" was not injected: check your FXML file 'game.fxml'.";
         assert boardHBox != null : "fx:id=\"boardHBox\" was not injected: check your FXML file 'game.fxml'.";
         assert controllsVBox != null : "fx:id=\"controllsVBox\" was not injected: check your FXML file 'game.fxml'.";
         assert exitButton != null : "fx:id=\"exitButton\" was not injected: check your FXML file 'game.fxml'.";
         assert mainHBox != null : "fx:id=\"mainHBox\" was not injected: check your FXML file 'game.fxml'.";
         assert moveBoardListView != null : "fx:id=\"moveBoardListView\" was not injected: check your FXML file 'game.fxml'.";
+        assert oponentColorLabel != null : "fx:id=\"oponentColorLabel\" was not injected: check your FXML file 'game.fxml'.";
+        assert oponentNameLabel != null : "fx:id=\"oponentNameLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert oponentScoreLabel != null : "fx:id=\"oponentScoreLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert passButton != null : "fx:id=\"passButton\" was not injected: check your FXML file 'game.fxml'.";
+        assert playerColorLabel != null : "fx:id=\"playerColorLabel\" was not injected: check your FXML file 'game.fxml'.";
+        assert playerNameLabel != null : "fx:id=\"playerNameLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert playerScoreLabel != null : "fx:id=\"playerScoreLabel\" was not injected: check your FXML file 'game.fxml'.";
         assert resignButton != null : "fx:id=\"resignButton\" was not injected: check your FXML file 'game.fxml'.";
+        assert statusLabel != null : "fx:id=\"statusLabel\" was not injected: check your FXML file 'game.fxml'.";
 
 
-        // TODO: ustawić elementy interfaceu
+        playerColorLabel.setText(client.getGame().getPlayerColor().toString());
+        playerScoreLabel.setText("0");
+        oponentColorLabel.setText(client.getGame().getPlayerColor().getOpposite().toString());
+        oponentColorLabel.setText("0");
+
         GRID_SIZE = this.client.getGame().getBS().getIntSize();
 
         stoneGrid = new BoardStone[GRID_SIZE + 1][GRID_SIZE + 1];
@@ -157,41 +198,152 @@ public class GameController {
             }
         }
 
-        //! 1 out white
-        if (this.client.getGame().getPlayerColor() == PlayerColors.WHITE) {
-            try {
-				this.client.sendMessage(new OkMsg());
-
-                // BoardStateMsg firstBS = (BoardStateMsg) this.client.receiveMessage();
-                // client.getGame().setState(firstBS.getBoardState());
-                // setBoard(firstBS.getBoardState());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-        }
-
         Thread fred = new Thread(new Runnable() {
 
             @Override
             public void run() {
-                while (true) {
-                    if (currentPlayerColor == getClient().getGame().getPlayerColor()) {
-                        //TODO: wait for player to click
-                        //TODO: receive board state
-                    }
-                    else
+                try {
+                    while (true)
                     {
-                        //TODO: send ok msg imediatelly
-                        //TODO: receive board state
+                        // System.out.println("\n\nTURN: " + whoseTurn);
+                        //! EACH WILL BE SENT TO SERVER
+                        if (isMyTurn())
+                        {
+                            //? This player turn
+                            //! 1 OUT +++++++++ -> It's my turn and I'm sending move to server
+                            // System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS PLAYER " + playerNo + " TURN: " + whoseTurn);
+                            sendMoveToServer();
+
+                            //! 2 IN ########## -> It's my turn and I'm waiting for server to send me info back
+                            receiveInfoFromServer();
+                        }
+                        else
+                        {
+                            // //! 1 OUT +++++++++ -> It's NOT my turn so I'm just sending OK to server
+                            // System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING OK TO SERVER AS PLAYER " + playerNo + " TURN: " + whoseTurn);
+                            client.sendMessage(new OkMsg());
+
+                            //! 2 IN ########## -> It's NOT my turn so I'm waiting for server to send me info back
+                            receiveInfoFromServer();
+                        }
+
                     }
                 }
+                catch (IOException | ClassNotFoundException e) { e.printStackTrace(); }
             }
-            
         });
         fred.start();
     }
 
-    
+    private void receiveInfoFromServer() throws IOException, ClassNotFoundException 
+    {
+        //TODO: !DOBREK! here you should receive the info from the server and handle it
+
+        AbstractMessage message = (AbstractMessage) client.receiveMessage();
+        System.out.println("MESSAGE " + message);
+
+        if (message.getType() == MessageType.BOARD_STATE)
+        {
+            //? Player did a valid move OR it was not his trun
+            //? server sent back the updated board
+            // System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + whoseTurn);
+            BoardStateMsg boardStateMsg = (BoardStateMsg) message;
+            client.getGame().setState(boardStateMsg.getBoardState());
+            setBoard(client.getGame().getState());
+            switchTurns();
+            if (isMyTurn()){
+                setStatus("your turn", Color.BLUEVIOLET);
+            }
+            else {
+                setStatus("oponent's turn", Color.BLUEVIOLET);
+            }
+        }
+        else if (message.getType() == MessageType.MOVE_NOT_VALID)
+        {
+            //? Player did an invalid move
+            //? we need to resent the move
+            MoveNotValidMsg moveNotValidMsg = (MoveNotValidMsg) message;
+            PlayerColors playerWhoDidNotValidMove = moveNotValidMsg.playerWhoDidNotValidMove();
+            String description = moveNotValidMsg.getDescription();
+            // System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID " + playerWhoDidNotValidMove + " " + description);
+            setStatus("invalid move", Color.RED);
+        }
+        else if (message.getType() == MessageType.PLAYER_PASSED)
+        {
+            //? Player passed
+            //? we need to print who passed
+            PlayerPassedMsg playerPassedMsg = (PlayerPassedMsg) message;
+            PlayerColors playerColor = playerPassedMsg.getPlayerColor();
+            // System.out.println(new Timestamp(System.currentTimeMillis()) + " PLAYER PASSED " + playerColor);
+            switchTurns();
+            setStatus("oponent's turn", Color.BLUEVIOLET);
+        }
+
+        else if (message.getType() == MessageType.GAME_OVER)
+        {
+            //? Game over
+            //? we need to print the winner and the reason
+            GameOverMsg gameOverMsg = (GameOverMsg) message;
+            PlayerColors winner = gameOverMsg.getWinner();
+            String description = gameOverMsg.getdescription();
+            // System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + description);
+            // System.exit(0);
+            if (winner == client.getGame().getPlayerColor()) {
+                setStatus("WINNER", Color.GREEN);
+            }
+            else {
+                setStatus("LOOSER", Color.RED);
+            }
+        }
+        else
+        {
+            //? Something went wrong, simply won't happen
+            System.err.println("Sorry sth went wrong :(");
+            setStatus("something went wrong", Color.RED);
+        }
+    }
+
+    private void setStatus(String text, Color color) {
+        Platform.runLater(() -> {
+            statusLabel.setText(text);
+            statusLabel.setTextFill(color);
+        });
+    }
+
+    private void resetStatus() {
+        Platform.runLater(() -> {
+            statusLabel.setText("");
+            statusLabel.setTextFill(Color.TRANSPARENT);
+        });
+    }
+
+    private void switchTurns() {
+        currentPlayerColor = currentPlayerColor.getOpposite();
+    }
+
+    protected void sendMoveToServer() {
+        while (true) {
+            if (stoneClicked) {
+                System.out.println("dupa");
+
+                stoneClicked = false;
+        
+                try {
+                    client.sendMessage(new MoveMsg(moveCordX, moveCordY));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+    }
+
+    private boolean isMyTurn() {
+        if (currentPlayerColor == this.client.getGame().getPlayerColor()){
+            return true;
+        } 
+        return false;
+    }
 
     public Client getClient() {
         return client;
@@ -204,7 +356,7 @@ public class GameController {
                     Color color;
 
                     if (this.client.getGame().getState()[i - 1][j - 1] == Stone.BLACK) color = Color.BLACK;
-                    else if (this.client.getGame().getState()[i - 1][j - 1] == Stone.BLACK) color = Color.WHITE;
+                    else if (this.client.getGame().getState()[i - 1][j - 1] == Stone.WHITE) color = Color.WHITE;
                     else color = Color.web("#3E3E3E");
 
                     ((Circle) ((VBox) boardHBox.getChildren().get(i)).getChildren().get(j)).setFill(color);
@@ -222,35 +374,12 @@ public class GameController {
     private EventHandler<MouseEvent> createCircleClickHandler(BoardStone circle) {
         return event -> {
             if (circle.getStoneColor().equals(Stone.EMPTY)) {
-                try {
-                    if (currentPlayerColor == this.client.getGame().getPlayerColor()) {
-                        System.out.println("send move message");
-                        this.client.sendMessage(new MoveMsg(circle.getX(), circle.getY()));
 
-                        System.out.println("recive response with board state");
-                        AbstractMessage responseForMove = (AbstractMessage) this.client.receiveMessage();
-                        if (responseForMove.getType() == MessageType.MOVE_NOT_VALID) {
-                            System.out.println(((MoveNotValidMsg) responseForMove).getDescription());
-                        } 
-                        else if (responseForMove.getType() == MessageType.BOARD_STATE) {
-                            Platform.runLater(() -> {
-                                circle.setFill(this.client.getGame().getPlayerColor() == PlayerColors.BLACK ? Color.BLACK : Color.WHITE);
-                            });
-                            
-                            currentPlayerColor = currentPlayerColor.getOpposite();
+                moveCordX = circle.getX() - 1;
+                moveCordY = circle.getY() - 1;
+                System.out.println("Clicked: " + moveCordX + ", " + moveCordY);
 
-                            client.getGame().setState(((BoardStateMsg) responseForMove).getBoardState());
-                            setBoard(client.getGame().getState());
-                            
-                            System.out.println("send ok message");
-                            client.sendMessage(new OkMsg());
-
-                        }
-                        // TODO: game over
-                    }
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
+                this.stoneClicked = true;
             }
 
             event.consume();
@@ -287,7 +416,10 @@ public class GameController {
     void exit() {
         // TODO: loose game
 
+
         try {
+            client.closeConnection();
+
             App.setRoot("menu", this, new MenuController());
         } catch (IOException e) {
             e.printStackTrace();

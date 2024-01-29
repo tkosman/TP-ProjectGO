@@ -31,7 +31,11 @@
             </HBox>
             <VBox alignment="TOP_RIGHT" prefWidth="100.0">
                <children>
-                  <Label fx:id="oponentNameLabel" text="Oponent" />
+                  <Label fx:id="oponentColorLabel" text="&lt;color&gt;">
+                     <graphic>
+                        <Label fx:id="oponentNameLabel" text="Oponent" />
+                     </graphic>
+                  </Label>
                   <Label fx:id="oponentScoreLabel" text="&lt;score&gt;">
                      <graphic>
                         <Label text="Score:" />
@@ -49,7 +53,11 @@
             </ListView>
             <VBox alignment="TOP_RIGHT" prefWidth="100.0">
                <children>
-                  <Label fx:id="playerNameLabel" text="You" />
+                  <Label fx:id="playerColorLabel" text="&lt;color&gt;">
+                     <graphic>
+                        <Label fx:id="playerNameLabel" text="You" />
+                     </graphic>
+                  </Label>
                   <Label fx:id="playerScoreLabel" text="&lt;score&gt;">
                      <graphic>
                         <Label text="Score:" />
@@ -70,6 +78,7 @@
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </VBox.margin>
             </Button>
+            <Label fx:id="statusLabel" textAlignment="CENTER" wrapText="true" />
          </children>
       </VBox>
    </children>
