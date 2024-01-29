@@ -356,6 +356,7 @@ public class MultiplayerGameThread implements Runnable
         try
         {
             connection.sendMessage(new SthWentWrongMsg(errorMessage));
+            System.exit(0);
         } 
         catch (IOException e)
         {} 
