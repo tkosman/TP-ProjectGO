@@ -24,11 +24,8 @@ public class Game {
         return this.ID;
     }
 
-    public Integer getX() {
-        if (this.BS == BoardSize.NINE_X_NINE) return 9;
-        else if (this.BS == BoardSize.THIRTEEN_X_THIRTEEN) return 13;
-        else if (this.BS == BoardSize.NINETEEN_X_NINETEEN) return 19;
-        else return null;
+    public BoardSize getBS() {
+        return this.BS;
     }
 
     public PlayerColors getPlayerColor() {
