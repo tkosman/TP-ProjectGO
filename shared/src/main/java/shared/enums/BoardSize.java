@@ -21,4 +21,9 @@ public enum BoardSize
         }
     }
 
+    public int getIntSize() {
+        if (this == NINE_X_NINE) return 9;
+        else if (this == THIRTEEN_X_THIRTEEN) return 13;
+        else return 19;
+    }
 }

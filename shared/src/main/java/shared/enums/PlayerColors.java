@@ -40,4 +40,9 @@ public enum PlayerColors
             return Stone.WHITE;
         }
     }
+
+    public String toString() {
+        if (this == BLACK) return "BLACK";
+        else return "WHITE";
+    }
 }

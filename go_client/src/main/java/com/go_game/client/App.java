@@ -38,24 +38,24 @@ public class App extends Application {
 
         stage.show();
 
-        // try {
-        //     Client client = new Client();
-        // } catch (ClassNotFoundException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
+        setRoot("login", null, null);
     }
 
-    public static void setRoot(String fxml) throws IOException {
-        Parent newRoot = loadFXML(fxml);
-
+    public static void setRoot(String fxml, Object currentController, Object nextController) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
+    
+        // Set the controller for the new FXML
+        fxmlLoader.setController(nextController);
+    
+        Parent newRoot = fxmlLoader.load();
+    
         // Set the background color of the new scene to black
         newRoot.setStyle("fade-background");
-
+    
         // Overlay the new scene on top of the old scene
         newRoot.setOpacity(0.0);
         scene.setRoot(newRoot);
-
+    
         // Create a fade transition for fade-in
         FadeTransition fadeTransition = new FadeTransition(FADE_DURATION, newRoot);
         fadeTransition.setFromValue(0.0);
