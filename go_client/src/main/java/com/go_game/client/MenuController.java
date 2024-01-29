@@ -245,9 +245,22 @@ public class MenuController {
 
             if (!alert.getResult().equals(ButtonType.CANCEL)) {
                 try {
-                    this.client.sendMessage(new ClientInfoMsg(GameMode.BOT));
-                    App.setRoot("game", this, new BotGameController(this.client));
-                } catch (IOException e) {
+                    IndexSetMsg playerIndex = (IndexSetMsg) getClient().receiveMessage();
+                    System.out.println("You are player " + playerIndex.getIndex() + "\n");
+
+                    //! 3 out
+                    getClient().sendMessage(new ClientInfoMsg(bs, GameMode.BOT));
+
+
+                    //! 4 in
+                    GameJoinedMsg gameJoinedMsg = (GameJoinedMsg) getClient().receiveMessage();
+                    System.out.println("Game ID: " + gameJoinedMsg.getGameID());
+
+                    getClient().setGame(new Game(bs, gameJoinedMsg.getGameID(), gameJoinedMsg.getPlayerColors()));
+
+                    //! if not working change to BotGameController
+                    App.setRoot("game", this, new MultiplayerGameController(this.client));
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }

@@ -322,7 +322,7 @@ public class BotGameController {
     protected void sendMoveToServer() {
         while (true) {
             if (stoneClicked) {
-                System.out.println("dupa");
+                System.out.println("");
 
                 stoneClicked = false;
         

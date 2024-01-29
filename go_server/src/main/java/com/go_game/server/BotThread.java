@@ -54,8 +54,10 @@ public class BotThread implements Runnable {
                 logGameState();
                 if (gameLogic.getWhoseTurn().equals(PlayerColors.BLACK))
                 {
+                    System.out.println("PLAYER");
                     handlePlayerMove();
                 } else {
+                    System.out.println("BOT MOVE");
                     handleBotMove();
                 }
             }
