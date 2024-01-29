@@ -15,4 +15,5 @@ public enum MessageType
     RESULTS_NEGOTIATION,     //? sent to negotiate the results
     REPLAY_FETCH,   //? sent to show all the replays
     CLOSE,          //? sent to close connection
+    STH_WENT_WRONG, //? sent to say that something went wrong
 }
