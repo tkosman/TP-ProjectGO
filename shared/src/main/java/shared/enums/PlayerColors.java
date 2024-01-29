@@ -45,4 +45,9 @@ public enum PlayerColors
         if (this == BLACK) return "BLACK";
         else return "WHITE";
     }
+
+    public int toInt() {
+        if (this == BLACK) return 0;
+        else return 1;
+    }
 }

@@ -192,6 +192,9 @@ public class MultiplayerGameThread implements Runnable
      */
     private boolean isMoveValid(int x, int y) throws IOException
     {
+        System.out.println(!gameLogic.isInBoundsAndEmptySpace(x, y));
+        System.out.println((gameLogic.isKoSituation(x, y)));
+        System.out.println( (gameLogic.isSuicideMove(x, y)));
         
         //? check for basic board bounds and empty space
         if (!gameLogic.isInBoundsAndEmptySpace(x, y))

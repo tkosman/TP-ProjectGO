@@ -16,6 +16,7 @@ import shared.other.Logger;
 public class BotThread implements Runnable {
     private static int gameID = 0;
     private boolean gameOver = false;
+    private volatile boolean running = true;
 
     private ClientConnection playerConnection;
     private GameLogic gameLogic;
@@ -49,20 +50,34 @@ public class BotThread implements Runnable {
     @Override
     public void run() {
         try {
-            while (!isGameOver())
+            while (!isGameOver() && running)
             {
                 logGameState();
                 if (gameLogic.getWhoseTurn().equals(PlayerColors.BLACK))
                 {
+                    logger.log("PLAYER");
                     handlePlayerMove();
                 } else {
+                    logger.log("BOT MOVE");
                     handleBotMove();
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
             logger.log("Error in BotThread: " + e.getMessage());
-            // TODO: Handle exception properly
+            running = false;
+            cleanupResources();
+            Thread.currentThread().interrupt();
+            logger.log("BotThread interrupted");
         }
+    }
+    private void cleanupResources()
+    {
+        try {
+            playerConnection.getSocket().close();
+        } catch (IOException e) {
+            logger.log("Error closing socket: " + e.getMessage());
+        }
+        logger.log("Connection securely closed");
     }
 
     public void handlePlayerMove() throws ClassNotFoundException, IOException {
@@ -100,11 +115,11 @@ public class BotThread implements Runnable {
         else if (isMoveValid(x, y)) {
             gameLogic.processMove(x, y);
             gameLogic.captureStones(x, y);
-            sendMessage(new BoardStateMsg(gameLogic.getBoard(), gameLogic.countCapturedStones()));
             switchTurns();
         }
         else
         {
+            //TODO: change
             sendMessage(new MoveNotValidMsg(gameLogic.getWhoseTurn(), "Invalid move!"));
         }
     }
