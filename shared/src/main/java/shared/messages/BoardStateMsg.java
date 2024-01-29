@@ -9,7 +9,11 @@ public class BoardStateMsg extends AbstractMessage
     private Stone[][] boardState;
     private int[] score;
 
-    DBQueuer dbQueuer;
+    private static DBQueuer dbQueuer;
+
+    public static void setDbQueuer(DBQueuer dbQueuer) {
+        BoardStateMsg.dbQueuer = dbQueuer;
+    }
     
 
     public BoardStateMsg(Stone[][] boardState, int[] score)
@@ -17,6 +21,8 @@ public class BoardStateMsg extends AbstractMessage
         this.type = MessageType.BOARD_STATE;
         this.boardState = boardState;
         this.score = score;
+
+        // queueSaveToDatabase();
     }
 
     public Stone[][] getBoardState()
@@ -28,6 +34,11 @@ public class BoardStateMsg extends AbstractMessage
     {
         return score;
     }
+
+    // private String serialize() throws IOException {
+    //     ObjectMapper mapper = new ObjectMapper();
+    //     return mapper.writeValueAsString(this);
+    // }
 
     @Override
     public String toString()
