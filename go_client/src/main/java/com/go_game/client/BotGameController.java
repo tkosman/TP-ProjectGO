@@ -39,7 +39,7 @@ import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
 import shared.messages.PlayerPassedMsg;
 
-public class GameController {
+public class BotGameController {
     private static final int CIRCLE_RADIUS = 15;
     private static final int SPACING = 5;
     private int GRID_SIZE;
@@ -104,20 +104,6 @@ public class GameController {
     @FXML
     private Label statusLabel;
 
-    @FXML
-    void exit(ActionEvent event) {
-
-    }
-
-    @FXML
-    void pass(ActionEvent event) {
-
-    }
-
-    @FXML
-    void resign(ActionEvent event) {
-
-    }
 
     @FXML
     void initialize() {
@@ -140,7 +126,7 @@ public class GameController {
         playerColorLabel.setText(client.getGame().getPlayerColor().toString());
         playerScoreLabel.setText("0");
         oponentColorLabel.setText(client.getGame().getPlayerColor().getOpposite().toString());
-        oponentColorLabel.setText("0");
+        oponentScoreLabel.setText("0");
 
         GRID_SIZE = this.client.getGame().getBS().getIntSize();
 
@@ -251,6 +237,12 @@ public class GameController {
             client.getGame().setState(boardStateMsg.getBoardState());
             setBoard(client.getGame().getState());
             switchTurns();
+
+            for (int i = 0; i <= 1; i++) {
+                client.getGame().setScore(boardStateMsg.getScore());
+                setScore();
+            }
+
             if (isMyTurn()){
                 setStatus("your turn", Color.BLUEVIOLET);
             }
@@ -265,8 +257,10 @@ public class GameController {
             MoveNotValidMsg moveNotValidMsg = (MoveNotValidMsg) message;
             PlayerColors playerWhoDidNotValidMove = moveNotValidMsg.playerWhoDidNotValidMove();
             String description = moveNotValidMsg.getDescription();
-            // System.out.println(new Timestamp(System.currentTimeMillis()) + " MOVE NOT VALID " + playerWhoDidNotValidMove + " " + description);
-            setStatus("invalid move", Color.RED);
+            System.out.println(description);
+            if (currentPlayerColor == playerWhoDidNotValidMove){
+                setStatus("invalid move", Color.RED);
+            }
         }
         else if (message.getType() == MessageType.PLAYER_PASSED)
         {
@@ -274,7 +268,6 @@ public class GameController {
             //? we need to print who passed
             PlayerPassedMsg playerPassedMsg = (PlayerPassedMsg) message;
             PlayerColors playerColor = playerPassedMsg.getPlayerColor();
-            // System.out.println(new Timestamp(System.currentTimeMillis()) + " PLAYER PASSED " + playerColor);
             switchTurns();
             setStatus("oponent's turn", Color.BLUEVIOLET);
         }
@@ -286,8 +279,6 @@ public class GameController {
             GameOverMsg gameOverMsg = (GameOverMsg) message;
             PlayerColors winner = gameOverMsg.getWinner();
             String description = gameOverMsg.getdescription();
-            // System.out.println(new Timestamp(System.currentTimeMillis()) + " GAME OVER\nWinner: " + winner + "\nReason: " + description);
-            // System.exit(0);
             if (winner == client.getGame().getPlayerColor()) {
                 setStatus("WINNER", Color.GREEN);
             }
@@ -310,10 +301,17 @@ public class GameController {
         });
     }
 
-    private void resetStatus() {
+    private void setScore() {
+        //! 0 - Black, 1 - White
         Platform.runLater(() -> {
-            statusLabel.setText("");
-            statusLabel.setTextFill(Color.TRANSPARENT);
+            if (client.getGame().getPlayerColor() == PlayerColors.BLACK) {
+                playerScoreLabel.setText(String.valueOf(client.getGame().getScore(0)));
+                oponentScoreLabel.setText(String.valueOf(client.getGame().getScore(1)));
+            }
+            else {  
+                playerScoreLabel.setText(String.valueOf(client.getGame().getScore(1)));
+                oponentScoreLabel.setText(String.valueOf(client.getGame().getScore(0)));
+            }
         });
     }
 
@@ -324,7 +322,7 @@ public class GameController {
     protected void sendMoveToServer() {
         while (true) {
             if (stoneClicked) {
-                System.out.println("dupa");
+                System.out.println("");
 
                 stoneClicked = false;
         
@@ -366,7 +364,7 @@ public class GameController {
     }
 
 
-    public GameController(Client client) {
+    public BotGameController(Client client) {
         this.client = client;
     }
 
