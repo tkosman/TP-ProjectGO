@@ -46,6 +46,7 @@ import shared.enums.GameMode;
 import shared.enums.MessageType;
 import shared.enums.PlayerColors;
 import shared.enums.Stone;
+import shared.enums.UnusualMove;
 import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
 import shared.messages.ClientInfoMsg;
@@ -56,6 +57,7 @@ import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.OkMsg;
 import shared.messages.PlayerPassedMsg;
+import shared.messages.PlayerResignedMsg;
 import shared.messages.ResultsNegotiationMsg;
 
 public class MultiplayerGameController {
@@ -71,6 +73,7 @@ public class MultiplayerGameController {
     private volatile boolean stoneClicked = false;
     private volatile boolean passed = false;
     private volatile boolean isNegotiating = false;
+    private volatile boolean resigned = false;
 
     private volatile int moveCordX;
     private volatile int moveCordY;
@@ -242,7 +245,9 @@ public class MultiplayerGameController {
                             //! 2 IN ########## -> It's NOT my turn so I'm waiting for server to send me info back
                             receiveInfoFromServer();
                         }
+                        // else if (!resigned) {
 
+                        // }
                     }
                 }
                 catch (IOException | ClassNotFoundException e) { e.printStackTrace(); }
@@ -301,19 +306,19 @@ public class MultiplayerGameController {
             switchTurns();
             //TODO: status
         }
-        else if (message.getType() == MessageType.GAME_OVER)
+        else if (message.getType() == MessageType.PLAYER_RESIGNED)
         {
-            //! probably never happenes
             //? Game over
             //? we need to print the winner and the reason
-            GameOverMsg gameOverMsg = (GameOverMsg) message;
-            PlayerColors winner = gameOverMsg.getWinner();
-            String description = gameOverMsg.getdescription();
-            if (winner == client.getGame().getPlayerColor()) {
-                setStatus("WINNER", Color.GREEN);
+            resigned = true;
+
+            PlayerResignedMsg playerResigned = (PlayerResignedMsg) message;
+            PlayerColors resignee = playerResigned.playerWhoResigned();
+            if (resignee == client.getGame().getPlayerColor()) {
+                setStatus("LOOSER", Color.RED);
             }
             else {
-                setStatus("LOOSER", Color.RED);
+                setStatus("WINNER", Color.GREEN);
             }
             //TODO: close socket
         }
@@ -477,6 +482,7 @@ public class MultiplayerGameController {
                                                     });
 
                                                     try {
+                                                        client.closeConnection();
                                                         App.setRoot("menu", this, new MenuController());
                                                     } catch (IOException ex) {
                                                         ex.printStackTrace();
@@ -734,6 +740,16 @@ public class MultiplayerGameController {
                 }
                 break;
             }
+            else if (resigned) {
+                System.out.println("resigned");
+        
+                try {
+                    client.sendMessage(new MoveMsg(UnusualMove.RESIGN));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
         }
     }
 
@@ -829,7 +845,9 @@ public class MultiplayerGameController {
     @FXML
     void resign() {
         // TODO: ofer resignation to oponent
-
+        if (isMyTurn()) {
+            resigned = true;
+        }
         // resoultAlert();
     }
 

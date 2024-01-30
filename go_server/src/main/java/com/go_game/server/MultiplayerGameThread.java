@@ -93,7 +93,7 @@ public class MultiplayerGameThread implements Runnable
                     //? player RESIGNED
                     gameOver = true;
                     sendMessageToBothPlayers(new PlayerResignedMsg("Player resigned", gameLogic.getWhoseTurn()));
-                    continue;
+                    break;
                 }
                 if (moveMsg.playerPassed())
                 {
