@@ -178,7 +178,14 @@ public class BotThread implements Runnable {
 
         sendMessage(new ResultsNegotiationMsg(description, territoryScore, capturedStones));
 
+        ResultsNegotiationMsg playerResults = (ResultsNegotiationMsg) playerConnection.receiveMessage();
+        int playerProposition = playerResults.getPlayerProposition();
+        territoryScore[0] = playerProposition;
+
+        playerConnection.sendMessage(new ResultsNegotiationMsg(territoryScore[1]));
+
         ResultsNegotiationMsg negotiationMsg = (ResultsNegotiationMsg) playerConnection.receiveMessage();
+
 
         if (negotiationMsg.getAgreement() == AgreementState.AGREE)
         {
