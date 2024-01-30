@@ -2,6 +2,8 @@ package com.go_game.server;
 
 import java.io.IOException;
 
+import shared.db.DBManager;
+import shared.db.DBQueuer;
 import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
 import shared.messages.AbstractMessage;
@@ -41,6 +43,7 @@ public class MultiplayerGameThread implements Runnable
     private ClientConnection player1Connection;
     private ClientConnection player2Connection;
     private GameLogic gameLogic;
+    private int moveNumber;
 
     private Logger logger = new Logger();
 
@@ -51,7 +54,10 @@ public class MultiplayerGameThread implements Runnable
         this.player2Connection = player2Connection;
 
         gameLogic = new GameLogic(boardSize);
-        gameID++;
+        DBQueuer dbQueuer = new DBQueuer(new DBManager());
+
+        gameID = dbQueuer.getHighestGameNumber() + 1;
+        moveNumber = 0;
 
 
         if(handshake())
@@ -112,7 +118,7 @@ public class MultiplayerGameThread implements Runnable
                     gameLogic.processMove(x, y);
                     gameLogic.captureStones(x, y);
 
-                    sendMessageToBothPlayers(new BoardStateMsg(gameLogic.getBoard(), gameLogic.countCapturedStones()));
+                    sendMessageToBothPlayers(new BoardStateMsg(gameLogic.getBoard(), gameLogic.countCapturedStones(), gameID, moveNumber++));
                     switchTurns();
                 }
                 else

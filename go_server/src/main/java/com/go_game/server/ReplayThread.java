@@ -25,55 +25,55 @@ public class ReplayThread implements Runnable {
 
     @Override
     public void run() {
-        try {
-            ResultSet rs = dbm.getAllReplays();
+        // try {
+            // ResultSet rs = dbm.getAllReplays();
 
-            List<List<String>> replayList = new ArrayList<>();
+        //     List<List<String>> replayList = new ArrayList<>();
 
-            while (rs.next()) {
-                List<String> rowValues = new ArrayList<>();
+        //     while (rs.next()) {
+        //         List<String> rowValues = new ArrayList<>();
 
-                int columnCount = rs.getMetaData().getColumnCount();
+        //         int columnCount = rs.getMetaData().getColumnCount();
 
-                for (int i = 1; i <= columnCount; i++) {
-                    rowValues.add(rs.getString(i));
-                }
-                replayList.add(rowValues);
-            }
+        //         for (int i = 1; i <= columnCount; i++) {
+        //             rowValues.add(rs.getString(i));
+        //         }
+        //         replayList.add(rowValues);
+        //     }
 
-            //? debug
-            // for (List<String> row : replayList) {
-            //     System.out.println(row);
-            // }
+        //     //? debug
+        //     // for (List<String> row : replayList) {
+        //     //     System.out.println(row);
+        //     // }
 
-            clientConnection.sendMessage(new ReplayFetchMsg(replayList));
+        //     clientConnection.sendMessage(new ReplayFetchMsg(replayList));
 
-            // wait for response
+        //     // wait for response
             
-            Object selectMessage = clientConnection.receiveMessage();
+        //     Object selectMessage = clientConnection.receiveMessage();
         
-            if (selectMessage.toString().contains("INDEX_SET")) {
-                int replayID = ((IndexSetMsg) selectMessage).getIndex();
-                String replay = dbm.getReplayString(replayID).getString("replay_string");
+        //     if (selectMessage.toString().contains("INDEX_SET")) {
+        //         int replayID = ((IndexSetMsg) selectMessage).getIndex();
+        //         String replay = dbm.getReplayString(replayID).getString("replay_string");
 
-                clientConnection.sendMessage(new StringMsg(replay));
+        //         clientConnection.sendMessage(new StringMsg(replay));
 
-                rs.close();
-                exit();
-            }
-            else if (selectMessage.toString().contains("CLOSE")) {
-                rs.close();
-                exit();
-            } 
-            else {
-                rs.close();
-                throw new IOException("invalid message recived");
-            }
+        //         rs.close();
+        //         exit();
+        //     }
+        //     else if (selectMessage.toString().contains("CLOSE")) {
+        //         rs.close();
+        //         exit();
+        //     } 
+        //     else {
+        //         rs.close();
+        //         throw new IOException("invalid message recived");
+        //     }
 
-        } catch (SQLException | IOException | ClassNotFoundException e) {
-            exit();
-            e.printStackTrace();
-        }
+        // } catch (SQLException | IOException | ClassNotFoundException e) {
+        //     exit();
+        //     e.printStackTrace();
+        // }
     }
 
     private void exit() {

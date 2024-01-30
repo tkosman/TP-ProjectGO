@@ -5,13 +5,16 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.ArrayList;
 
 
 //? Singleton
 public class DBManager {
     private static final String DB_URL = "jdbc:mariadb://localhost:3306/go_replays?useSSL=false";
-    private static final String DB_USERNAME = "server";
-    private static final String DB_PASSWORD = "password1234";
+    private static final String DB_USERNAME = "root";
+    private static final String DB_PASSWORD = "root";
     private static Connection connection;
 
     public DBManager() {
@@ -23,31 +26,47 @@ public class DBManager {
         }
     }
 
-    public ResultSet getAllReplays() throws SQLException {
-        String query = """
-                SELECT ID, date
-                FROM replays
-                """;
-
-        System.out.println("getting all replays");
-
+    public void saveGameState(int gameID, int moveNumber, byte[] gameState) throws SQLException {
+        String query = "INSERT INTO replays (game_id, move_number, state, date) VALUES (?, ?, ?, ?)";
+        
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            return statement.executeQuery();
+            statement.setInt(1, gameID);
+            statement.setInt(2, moveNumber);
+            statement.setBytes(3, gameState);
+            statement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+            statement.executeUpdate();
         }
     }
 
-    public ResultSet getReplayString(int id) throws SQLException {
-        String query = """
-            SELECT replay_string
-            FROM replays
-            WHERE ID = ?
-            """;
-
-        System.out.println("getting replay string");
+    public List<byte[]> getGameStates(int gameID) throws SQLException 
+    {
+        List<byte[]> gameStates = new ArrayList<>();
+        String query = "SELECT state FROM replays WHERE game_id = ? ORDER BY move_number";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, String.valueOf(id));
-            return statement.executeQuery();
+            statement.setInt(1, gameID);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    byte[] state = resultSet.getBytes("state");
+                    gameStates.add(state);
+                }
+            }
+        }
+        return gameStates;
+    }
+
+    public int getHighestGameNumber() throws SQLException {
+        String query = "SELECT MAX(game_id) AS max_game_id FROM replays";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("max_game_id");
+                } else {
+                    return 0; // Default value if no games are found
+                }
+            }
         }
     }
+
+    
 }

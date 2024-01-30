@@ -3,6 +3,8 @@ package com.go_game.server;
 import java.io.IOException;
 import java.util.Random;
 
+import shared.db.DBManager;
+import shared.db.DBQueuer;
 import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
 import shared.messages.*;
@@ -23,13 +25,17 @@ public class BotThread implements Runnable {
     private Logger logger = new Logger();
     private Random random = new Random();
     private int boardSize;
+    private int moveNumber;
 
     public BotThread(ClientConnection playerConnection, int boardSize) throws IOException {
         this.playerConnection = playerConnection;
         this.boardSize = boardSize;
 
         gameLogic = new GameLogic(boardSize);
-        gameID++;
+        
+        DBQueuer dbQueuer = new DBQueuer(new DBManager());
+        gameID = dbQueuer.getHighestGameNumber() + 1;
+        moveNumber = 0;
 
         playerConnection.sendMessage(new GameJoinedMsg(gameID, PlayerColors.BLACK, gameLogic.getWhoseTurn()));
 
@@ -93,7 +99,7 @@ public class BotThread implements Runnable {
             if (isMoveValid(x, y)) {
                 gameLogic.processMove(x, y);
                 gameLogic.captureStones(x, y);
-                sendMessage(new BoardStateMsg(gameLogic.getBoard(), gameLogic.countCapturedStones()));
+                sendMessage(new BoardStateMsg(gameLogic.getBoard(), gameLogic.countCapturedStones(), gameID, moveNumber++));
                 switchTurns();
                 return;
             }
