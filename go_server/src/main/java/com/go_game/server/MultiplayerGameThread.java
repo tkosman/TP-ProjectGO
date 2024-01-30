@@ -6,6 +6,7 @@ import shared.db.DBManager;
 import shared.db.DBQueuer;
 import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
+import shared.enums.UnusualMove;
 import shared.messages.AbstractMessage;
 import shared.messages.BoardStateMsg;
 import shared.messages.GameJoinedMsg;
@@ -13,6 +14,7 @@ import shared.messages.GameOverMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.PlayerPassedMsg;
+import shared.messages.PlayerResignedMsg;
 import shared.messages.ResultsNegotiationMsg;
 import shared.messages.SthWentWrongMsg;
 import shared.other.Logger;
@@ -86,6 +88,13 @@ public class MultiplayerGameThread implements Runnable
             {
                 logGameState();
                 MoveMsg moveMsg = receiveMove();
+                if (moveMsg.getUnusualMove() != UnusualMove.RESIGN)
+                {
+                    //? player RESIGNED
+                    gameOver = true;
+                    sendMessageToBothPlayers(new PlayerResignedMsg("Player resigned", gameLogic.getWhoseTurn()));
+                    continue;
+                }
                 if (moveMsg.playerPassed())
                 {
                     //? player PASSED

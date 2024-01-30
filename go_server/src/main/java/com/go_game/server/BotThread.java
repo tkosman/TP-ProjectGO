@@ -7,7 +7,16 @@ import shared.db.DBManager;
 import shared.db.DBQueuer;
 import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
-import shared.messages.*;
+import shared.enums.UnusualMove;
+import shared.messages.AbstractMessage;
+import shared.messages.BoardStateMsg;
+import shared.messages.GameJoinedMsg;
+import shared.messages.GameOverMsg;
+import shared.messages.MoveMsg;
+import shared.messages.MoveNotValidMsg;
+import shared.messages.PlayerPassedMsg;
+import shared.messages.PlayerResignedMsg;
+import shared.messages.ResultsNegotiationMsg;
 import shared.other.Logger;
 
 /**
@@ -113,8 +122,14 @@ public class BotThread implements Runnable {
     private void processMove(MoveMsg moveMsg) throws IOException {
         int x = moveMsg.getX();
         int y = moveMsg.getY();
-        
-        if (moveMsg.playerPassed())
+
+        if (moveMsg.getUnusualMove() == UnusualMove.RESIGN)
+        {
+            sendMessage(new PlayerResignedMsg("Player resigned", gameLogic.getWhoseTurn()));
+            gameOver = true;
+            return;
+        }
+        else if (moveMsg.playerPassed())
         {
             gameOver = true;
         }
@@ -125,7 +140,6 @@ public class BotThread implements Runnable {
         }
         else
         {
-            //TODO: change
             sendMessage(new MoveNotValidMsg(gameLogic.getWhoseTurn(), "Invalid move!"));
         }
     }
