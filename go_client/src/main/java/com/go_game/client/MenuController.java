@@ -235,7 +235,7 @@ public class MenuController {
 
                     if (!alert.getResult().equals(ButtonType.CANCEL)) {
                         try {
-                            App.setRoot("game", this, new MultiplayerGameController(this.client));
+                            App.setRoot("game", this, new MultiplayerGameController(this.client, GameMode.MULTI_PLAYER));
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -269,7 +269,7 @@ public class MenuController {
 
                     getClient().setGame(new Game(bs, gameJoinedMsg.getGameID(), gameJoinedMsg.getPlayerColors()));
 
-                    App.setRoot("game", this, new BotGameController(this.client));
+                    App.setRoot("game", this, new MultiplayerGameController(this.client, GameMode.BOT));
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }

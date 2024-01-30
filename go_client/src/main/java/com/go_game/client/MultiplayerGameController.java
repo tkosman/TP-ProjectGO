@@ -22,6 +22,8 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -61,9 +63,10 @@ public class MultiplayerGameController {
     private static final int SPACING = 5;
     private int GRID_SIZE;
 
+    private GameMode gameMode;
     private Client client;
 
-    private volatile BoardStone[][] stoneGrid;
+    // private volatile BoardStone[][] stoneGrid;
 
     private volatile boolean stoneClicked = false;
     private volatile boolean passed = false;
@@ -156,7 +159,7 @@ public class MultiplayerGameController {
 
         GRID_SIZE = this.client.getGame().getBS().getIntSize();
 
-        stoneGrid = new BoardStone[GRID_SIZE + 1][GRID_SIZE + 1];
+        // stoneGrid = new BoardStone[GRID_SIZE + 1][GRID_SIZE + 1];
 
         boardHBox.setSpacing(SPACING);
         boardHBox.setAlignment(Pos.CENTER);
@@ -332,7 +335,6 @@ public class MultiplayerGameController {
                 showResultAlert(resultsNegotiation);
             });
             
-            // isNegotiating = false;
         } 
         else
         {
@@ -440,12 +442,63 @@ public class MultiplayerGameController {
                                         //TODO: send (AgreamentState)
                                         getClient().sendMessage(new ResultsNegotiationMsg(AgreementState.AGREE));
         
-                                        latch2.countDown();
-
 
                                         //TODO: recive new message: if (gameoverMsg):
                                         //TODO:     - handle game over (decide who wins) (score is a float here)
-                                        ResultsNegotiationMsg oponentsAgreement = (ResultsNegotiationMsg) getClient().receiveMessage();
+                                        AbstractMessage oponentsAgreement = (AbstractMessage) getClient().receiveMessage();
+
+                                        latch2.countDown();
+
+
+                                        if (oponentsAgreement.getType() == MessageType.GAME_OVER) {
+                                            //! game finished (both agreed)
+
+                                            GameOverMsg scores = (GameOverMsg) oponentsAgreement;
+
+                                            float oponentsFinalScore = scores.getScore()[getClient().getGame().getPlayerColor().getOpposite().toInt()];
+                                            float playerFinalScore = scores.getScore()[getClient().getGame().getPlayerColor().toInt()];
+
+                                            Platform.runLater(() -> {
+                                                ImageView resImageView = new ImageView();
+
+                                                if (playerFinalScore > oponentsFinalScore) {
+                                                    resImageView.setImage(new Image(App.class.getResourceAsStream("winner.png")));
+                                                }
+                                                else {
+                                                    resImageView.setImage(new Image(App.class.getResourceAsStream("looser.png")));
+                                                }
+
+                                                Label yourFinalScoreLabel = new Label(Float.toString(playerFinalScore));
+                                                
+                                                Button ok = new Button("ok");
+                                                ok.setOnAction(event -> {
+                                                    Platform.runLater(() -> {
+                                                        closeAlert();
+                                                    });
+
+                                                    try {
+                                                        App.setRoot("menu", this, new MenuController());
+                                                    } catch (IOException ex) {
+                                                        ex.printStackTrace();
+                                                    }
+                                                });
+
+                                                VBox endScreen = new VBox(resImageView, yourFinalScoreLabel, ok);
+                                                
+                                                alert.getDialogPane().setContent(endScreen);
+                                            });
+                                        } 
+                                        else {
+                                            ResultsNegotiationMsg resumeGameMsg = (ResultsNegotiationMsg) oponentsAgreement;
+
+                                            currentPlayerColor = resumeGameMsg.getWhoseTurn();
+                                            isNegotiating = false;
+
+
+                                            Platform.runLater(() -> {
+                                                closeAlert();
+                                            });
+                                        }
         
         
                                     } catch (IOException | ClassNotFoundException ex) {
@@ -461,17 +514,9 @@ public class MultiplayerGameController {
                             // Set up an event handler to check if the latch2 is counted down
                             pauseTransition.setOnFinished(e -> {
                                 if (latch2.getCount() == 0) { // If latch2 is counted down, proceed
-                                    alert.setResult(ButtonType.OK);
-
-                                    // if (!alert.getResult().equals(ButtonType.CANCEL)) {
-                                    //     try {
-                                    //         App.setRoot("game", this, new MultiplayerGameController(this.client));
-                                    //     } catch (IOException ex) {
-                                    //         ex.printStackTrace();
-                                    //     }
-                                    // }
-
-                                    alert.close();
+                                    //! wait
+                                    // alert.getDialogPane().getChildren().clear();
+                                    
                                 } else { // If latch2 is not counted down, continue waiting
                                     pauseTransition.play();
                                 }
@@ -483,17 +528,63 @@ public class MultiplayerGameController {
 
                         //TODO: send (AgreamentState)
                         disagreeButton.setOnAction(ev -> {
-                            try {
-                                getClient().sendMessage(new ResultsNegotiationMsg(AgreementState.DISAGREE));
+                            Platform.runLater(() -> {
+                                alert.getDialogPane().setContent(waitingAnimation());
+                            });
 
-                                alert.getDialogPane().getChildren().clear();
-                            } catch (IOException ex) {
-                                ex.printStackTrace();
-                            }
-                            //TODO: else (resoultNegotiationMsg) (AgreamentState, WhosTurn):
-                            //TODO:     - resume game 
+                            // Create a CountDownLatch with an initial count of 1
+                            CountDownLatch latch2 = new CountDownLatch(1);
 
+                            new Thread(new Runnable() {
 
+                                @Override
+                                public void run() {
+                                    try {
+                                        //TODO: send (AgreamentState)
+                                        getClient().sendMessage(new ResultsNegotiationMsg(AgreementState.DISAGREE));
+
+                                        latch2.countDown();
+        
+                                        //TODO: else (resoultNegotiationMsg) (AgreamentState, WhosTurn):
+                                        //TODO:     - resume game 
+                                        ResultsNegotiationMsg oponentsAgreement = (ResultsNegotiationMsg) getClient().receiveMessage();
+
+                                        currentPlayerColor = oponentsAgreement.getWhoseTurn();
+                                        isNegotiating = false;
+
+                                        System.out.println("DUPA");
+
+                                        Platform.runLater(() -> {
+                                            closeAlert();
+                                        });
+                                    } catch (IOException | ClassNotFoundException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+
+                            }).start();
+
+                            // Create a PauseTransition without a fixed duration
+                            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1));
+
+                            // Set up an event handler to check if the latch2 is counted down
+                            pauseTransition.setOnFinished(e -> {
+                                if (latch2.getCount() == 0) { // If latch2 is counted down, proceed
+                                    // Platform.runLater(() -> {
+                                    //     // alert.getDialogPane().getChildren().clear();
+                                    //     closeAlert();
+                                    // });
+                                } else { // If latch2 is not counted down, continue waiting
+                                    pauseTransition.play();
+                                }
+                            });
+
+                            // Start the initial pause transition
+                            pauseTransition.play();
+
+                            Platform.runLater(() -> {
+                                closeAlert();
+                            });
                         });
 
                         HBox buttons = new HBox(10, agreeButton, disagreeButton);
@@ -508,18 +599,14 @@ public class MultiplayerGameController {
                         e.printStackTrace();
                     }
                 }
-                
             }).start();
             
-
             PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1));
 
             // Set up an event handler to check if the latch2 is counted down
             pauseTransition.setOnFinished(e -> {
                 if (latch1.getCount() == 0) { // If latch2 is counted down, proceed
-                    Platform.runLater(() -> {
-                        alert.getDialogPane().getChildren().clear();
-                    });
+                    //! wait
                 } else { // If latch2 is not counted down, continue waiting
                     pauseTransition.play();
                 }
@@ -528,6 +615,31 @@ public class MultiplayerGameController {
 
         // Show the alert and wait for user interaction
         alert.showAndWait();
+    }
+
+    private void closeAlert() {
+        // Find the open alert and close it
+        javafx.scene.control.DialogPane dialogPane = getOpenDialogPane();
+        if (dialogPane != null) {
+            dialogPane.getScene().getWindow().hide();
+        }
+    }
+
+    private javafx.scene.control.DialogPane getOpenDialogPane() {
+        // Iterate through the open windows to find the alert
+        for (javafx.stage.Window window : javafx.stage.Window.getWindows()) {
+            if (window instanceof javafx.stage.Stage) {
+                javafx.stage.Stage stage = (javafx.stage.Stage) window;
+                javafx.scene.Scene scene = stage.getScene();
+                if (scene != null) {
+                    javafx.scene.Parent root = scene.getRoot();
+                    if (root instanceof javafx.scene.control.DialogPane) {
+                        return (javafx.scene.control.DialogPane) root;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private Node waitingAnimation() {
@@ -589,8 +701,9 @@ public class MultiplayerGameController {
 
     private void switchTurns() {
         //TODO: check implementation for bot
-        currentPlayerColor = currentPlayerColor.getOpposite();
-
+        if (gameMode == GameMode.MULTI_PLAYER) {
+            currentPlayerColor = currentPlayerColor.getOpposite();
+        }
     }
 
     protected void sendMoveToServer() {
@@ -652,7 +765,8 @@ public class MultiplayerGameController {
     }
 
 
-    public MultiplayerGameController(Client client) {
+    public MultiplayerGameController(Client client, GameMode gameMode) {
+        this.gameMode = gameMode;
         this.client = client;
     }
 
