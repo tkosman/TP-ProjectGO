@@ -110,6 +110,7 @@ public class GameLogic
         {
             return false;
         }
+        printBoard(previousBoard);
 
         Stone[][] saveBoard = copyBoard(board);
         board[x][y] = whoseTurn.toStone();
