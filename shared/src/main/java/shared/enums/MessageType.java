@@ -12,8 +12,9 @@ public enum MessageType
     MOVE_NOT_VALID,         //? sent to say that the move was invalid
     GAME_OVER,              //? sent to say that the game is over
     PLAYER_PASSED,          //? sent to say that the player passed
-    RESULTS_NEGOTIATION,     //? sent to negotiate the results
-    REPLAY_FETCH,   //? sent to show all the replays
-    CLOSE,          //? sent to close connection
-    STH_WENT_WRONG, //? sent to say that something went wrong
+    RESULTS_NEGOTIATION,    //? sent to negotiate the results
+    REPLAY_FETCH,           //? sent to show all the replays
+    CLOSE,                  //? sent to close connection
+    STH_WENT_WRONG,         //? sent to say that something went wrong
+    PLAYER_RESIGNED;        //? sent to say that the player resigned
 }
