@@ -31,9 +31,9 @@ This project is a client-server implementation of the GO Game in Java, developed
 ## Game Modes
 
 <p align="center">
-  <img src="go_client/src/main/resources/com/go_game/client/logo.png" alt="Bot Mode" width="150"/>
+  <img src="go_client/src/main/resources/com/go_game/client/bot.png" alt="Bot Mode" width="150"/>
   &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="go_client/src/main/resources/com/go_game/client/logo.png" alt="Multiplayer Mode" width="150"/>
+  <img src="go_client/src/main/resources/com/go_game/client/pvp.png" alt="Multiplayer Mode" width="150"/>
 </p>
 
 
