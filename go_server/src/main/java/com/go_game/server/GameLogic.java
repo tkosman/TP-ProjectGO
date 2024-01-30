@@ -110,7 +110,6 @@ public class GameLogic
         {
             return false;
         }
-        printBoard(previousBoard);
 
         Stone[][] saveBoard = copyBoard(board);
         board[x][y] = whoseTurn.toStone();
@@ -334,27 +333,27 @@ public class GameLogic
         this.boardSize = boardSize;
     }
 
-    private void printBoard(Stone[][] boardlocal)
-    {
-        // System.out.print("\033[H\033[2J");  
-        // System.out.flush();  
-        for (int y = 0; y < boardSize; y++) {
-            for (int x = 0; x < boardSize; x++) {
-                switch (boardlocal[x][y]) {
-                    case BLACK:
-                        System.out.print("B ");
-                        break;
-                    case WHITE:
-                        System.out.print("W ");
-                        break;
-                    default:
-                        System.out.print(". ");
-                        break;
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-        System.out.println();
-    }
+    // private void printBoard(Stone[][] boardlocal)
+    // {
+    //     // System.out.print("\033[H\033[2J");  
+    //     // System.out.flush();  
+    //     for (int y = 0; y < boardSize; y++) {
+    //         for (int x = 0; x < boardSize; x++) {
+    //             switch (boardlocal[x][y]) {
+    //                 case BLACK:
+    //                     System.out.print("B ");
+    //                     break;
+    //                 case WHITE:
+    //                     System.out.print("W ");
+    //                     break;
+    //                 default:
+    //                     System.out.print(". ");
+    //                     break;
+    //             }
+    //         }
+    //         System.out.println();
+    //     }
+    //     System.out.println();
+    //     System.out.println();
+    // }
 }
