@@ -55,7 +55,7 @@ public class ReplayThread implements Runnable {
             //? Receive game ID
             ReplayFetchMsg replayFetchMsg = (ReplayFetchMsg)clientConnection.receiveMessage();
 
-            // Send all board states for that game ID
+            //? Send all board states for that game ID
             List<BoardStateMsg> boardStateMsgs = dbQueuer.retrieveGameStates(replayFetchMsg.getGameID());
             clientConnection.sendMessage(new ReplayFetchMsg(boardStateMsgs));
         }
