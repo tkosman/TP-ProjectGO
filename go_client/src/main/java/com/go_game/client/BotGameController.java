@@ -49,7 +49,8 @@ public class BotGameController {
     private volatile BoardStone[][] stoneGrid;
 
     private volatile boolean stoneClicked = false;
-    // private Point moveCord;
+    private volatile boolean passed = false;
+
     private volatile int moveCordX;
     private volatile int moveCordY;
 
@@ -128,6 +129,13 @@ public class BotGameController {
         oponentColorLabel.setText(client.getGame().getPlayerColor().getOpposite().toString());
         oponentScoreLabel.setText("0");
 
+        if (isMyTurn()) {
+            setStatus("your turn", Color.BLUEVIOLET);
+        }
+        else {
+            setStatus("oponent's turn", Color.BLUEVIOLET);
+        } 
+
         GRID_SIZE = this.client.getGame().getBS().getIntSize();
 
         stoneGrid = new BoardStone[GRID_SIZE + 1][GRID_SIZE + 1];
@@ -197,10 +205,11 @@ public class BotGameController {
                         {
                             //? This player turn
                             //! 1 OUT +++++++++ -> It's my turn and I'm sending move to server
-                            // System.out.println(new Timestamp(System.currentTimeMillis()) + " SENDING MOVE TO SERVER AS PLAYER " + playerNo + " TURN: " + whoseTurn);
+                            System.out.println( " SENDING MOVE TO SERVER AS PLAYER " + " TURN: " + currentPlayerColor);
                             sendMoveToServer();
 
                             //! 2 IN ########## -> It's my turn and I'm waiting for server to send me info back
+                            System.out.println("RECEIVED MOVE FROM SERVER");
                             receiveInfoFromServer();
                         }
                         else
@@ -232,7 +241,7 @@ public class BotGameController {
         {
             //? Player did a valid move OR it was not his trun
             //? server sent back the updated board
-            // System.out.println(new Timestamp(System.currentTimeMillis()) + " RECEIVE BOARD FROM SERVER " + playerNo  + " TURN: " + whoseTurn);
+            System.out.println(" RECEIVE BOARD FROM SERVER "  + " TURN: " + currentPlayerColor);
             BoardStateMsg boardStateMsg = (BoardStateMsg) message;
             client.getGame().setState(boardStateMsg.getBoardState());
             setBoard(client.getGame().getState());
@@ -269,11 +278,11 @@ public class BotGameController {
             PlayerPassedMsg playerPassedMsg = (PlayerPassedMsg) message;
             PlayerColors playerColor = playerPassedMsg.getPlayerColor();
             switchTurns();
-            setStatus("oponent's turn", Color.BLUEVIOLET);
+            //TODO: status
         }
-
         else if (message.getType() == MessageType.GAME_OVER)
         {
+            //! probably never happenes
             //? Game over
             //? we need to print the winner and the reason
             GameOverMsg gameOverMsg = (GameOverMsg) message;
@@ -285,13 +294,32 @@ public class BotGameController {
             else {
                 setStatus("LOOSER", Color.RED);
             }
+            //TODO: close socket
         }
-        else
+        else if (message.getType() == MessageType.STH_WENT_WRONG)
         {
+            //TODO: handle
             //? Something went wrong, simply won't happen
-            System.err.println("Sorry sth went wrong :(");
+            System.out.println("Sorry sth went wrong :(");
             setStatus("something went wrong", Color.RED);
         }
+        else if (message.getType() == MessageType.RESULTS_NEGOTIATION)
+        {
+            //TODO: message contains (description, territoryScore, capturedStones) int[2]
+            //TODO: popup with the data and place for sugested score (int playerProposition)
+            //TODO: recive new message (int playerProposition) oponent's sugestion
+            //TODO: popup my suggestion, oponent's sugestion nad calculated score and ask if accepted
+            //TODO: send (AgreamentState)
+            //TODO: recive new message: if (gameoverMsg):
+            //TODO:     - handle game over (decide who wins) (score is a float here)
+            //TODO: else (resoultNegotiationMsg) (AgreamentState, WhosTurn):
+            //TODO:     - resume game 
+        } 
+        else
+        {
+            System.err.println("message not found");
+        }
+
     }
 
     private void setStatus(String text, Color color) {
@@ -316,18 +344,35 @@ public class BotGameController {
     }
 
     private void switchTurns() {
-        currentPlayerColor = currentPlayerColor.getOpposite();
+        //TODO: check implementation for bot
+        //! IMPORTANT: uncomment this
+        //currentPlayerColor = currentPlayerColor.getOpposite();
+
     }
 
     protected void sendMoveToServer() {
         while (true) {
             if (stoneClicked) {
-                System.out.println("");
+                System.out.println("moved");
 
                 stoneClicked = false;
         
                 try {
                     client.sendMessage(new MoveMsg(moveCordX, moveCordY));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+            else if (passed) {
+                System.out.println("passed");
+
+                passed = false;
+        
+                setStatus("oponent's turn", Color.BLUEVIOLET);
+
+                try {
+                    client.sendMessage(new MoveMsg(true));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -448,19 +493,11 @@ public class BotGameController {
         alert.showAndWait();
     }
 
+    //! something is wrong here
     @FXML
     void pass() {
-        if (currentPlayerColor.equals(this.client.getGame().getPlayerColor())) {
-            try {
-                this.client.sendMessage(new MoveMsg(true));
-                switchColors();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (isMyTurn()) {
+            passed = true;
         }
-    }
-
-    private void switchColors() {
-        currentPlayerColor = currentPlayerColor.getOpposite();
     }
 }

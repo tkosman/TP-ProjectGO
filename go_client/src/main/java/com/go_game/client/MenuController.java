@@ -13,6 +13,7 @@ import com.go_game.client.connection.Game;
 import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -140,7 +141,7 @@ public class MenuController {
         }
     }
 
-
+    //TODO: show alert on the middle of the window, not screen
     private void gameModeAlert(BoardSize bs) {
         ButtonType cancelButton = new ButtonType("cancel", ButtonData.CANCEL_CLOSE);
 
@@ -178,6 +179,16 @@ public class MenuController {
 
         alert.setOnCloseRequest(event -> {
             alert.setResult(ButtonType.CANCEL);
+        });
+
+        Button cancelBtn = (Button) alert.getDialogPane().lookupButton(cancelButton);
+        cancelBtn.addEventFilter(ActionEvent.ACTION, event -> {
+            try {
+                // Close the connection when the cancel button is pressed
+                client.closeConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
 
         pvpButton.setOnAction(event -> {
@@ -258,8 +269,7 @@ public class MenuController {
 
                     getClient().setGame(new Game(bs, gameJoinedMsg.getGameID(), gameJoinedMsg.getPlayerColors()));
 
-                    //! if not working change to BotGameController
-                    App.setRoot("game", this, new MultiplayerGameController(this.client));
+                    App.setRoot("game", this, new BotGameController(this.client));
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }

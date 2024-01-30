@@ -25,6 +25,7 @@ public class Server
         new Server().runServer();
     }
     
+    //TODO: remove client from queue when socket is closed
     private void runServer()
     {
         try (ServerSocket serverSocket = new ServerSocket(PORT))
