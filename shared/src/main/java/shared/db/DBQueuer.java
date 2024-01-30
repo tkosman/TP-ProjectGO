@@ -13,6 +13,9 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Date;
+import java.util.HashMap;
 
 
 public class DBQueuer {
@@ -96,10 +99,24 @@ public class DBQueuer {
         try {
             return dbManager.getHighestGameNumber();
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public Map<Integer, Date> getAllGameIDs() {
+        try {
+            return dbManager.getAllGameIDsAndDates();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new HashMap<>() {
+            
+        };
+    }
+
+    public void dbClose() {
+        dbManager.close();
     }
 
     

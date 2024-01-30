@@ -1,86 +1,73 @@
 package com.go_game.server;
 
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import shared.db.DBManager;
-import shared.messages.IndexSetMsg;
+import shared.db.DBQueuer;
+import shared.messages.BoardStateMsg;
 import shared.messages.ReplayFetchMsg;
-import shared.messages.StringMsg;
 
-// TODO: database
+/**
+ * The ReplayThread class represents a thread that handles replay functionality in the server.
+ * It retrieves game IDs and board states from the database and sends them to the client.
+ */
 public class ReplayThread implements Runnable {
-    private DBManager dbm;
+    private DBQueuer dbQueuer;
     private ClientConnection clientConnection;
 
-    public ReplayThread(ClientConnection clientConnection) {
-        this.dbm = new DBManager();
-        
+    /**
+     * Constructs a ReplayThread object with the specified client connection.
+     * Initializes the DBQueuer and starts the thread.
+     *
+     * @param clientConnection the client connection to communicate with the client
+     */
+    public ReplayThread(ClientConnection clientConnection) 
+    {
+        this.dbQueuer = new DBQueuer(new DBManager());
         Thread fred = new Thread(this);
         fred.start();
     }
 
+    /**
+     * Runs the replay thread.
+     * Sends all game IDs and dates to the client.
+     * Receives a game ID from the client.
+     * Sends all board states for the specified game ID to the client.
+     * Closes the database connection.
+     * 
+     * Used messages:
+     * ReplayFetchMsg - sent to communicate btw client and db
+     * 
+     * @throws IOException if an I/O error occurs when sending or receiving
+     */
     @Override
-    public void run() {
-        // try {
-            // ResultSet rs = dbm.getAllReplays();
+    public void run()
+    {
+        try 
+        {
+            //? Send all game IDs and dates
+            Map<Integer, Date> gameIDsAndDates = dbQueuer.getAllGameIDs();
+            clientConnection.sendMessage(new ReplayFetchMsg(gameIDsAndDates));
 
-        //     List<List<String>> replayList = new ArrayList<>();
+            //? Receive game ID
+            ReplayFetchMsg replayFetchMsg = (ReplayFetchMsg)clientConnection.receiveMessage();
 
-        //     while (rs.next()) {
-        //         List<String> rowValues = new ArrayList<>();
-
-        //         int columnCount = rs.getMetaData().getColumnCount();
-
-        //         for (int i = 1; i <= columnCount; i++) {
-        //             rowValues.add(rs.getString(i));
-        //         }
-        //         replayList.add(rowValues);
-        //     }
-
-        //     //? debug
-        //     // for (List<String> row : replayList) {
-        //     //     System.out.println(row);
-        //     // }
-
-        //     clientConnection.sendMessage(new ReplayFetchMsg(replayList));
-
-        //     // wait for response
-            
-        //     Object selectMessage = clientConnection.receiveMessage();
-        
-        //     if (selectMessage.toString().contains("INDEX_SET")) {
-        //         int replayID = ((IndexSetMsg) selectMessage).getIndex();
-        //         String replay = dbm.getReplayString(replayID).getString("replay_string");
-
-        //         clientConnection.sendMessage(new StringMsg(replay));
-
-        //         rs.close();
-        //         exit();
-        //     }
-        //     else if (selectMessage.toString().contains("CLOSE")) {
-        //         rs.close();
-        //         exit();
-        //     } 
-        //     else {
-        //         rs.close();
-        //         throw new IOException("invalid message recived");
-        //     }
-
-        // } catch (SQLException | IOException | ClassNotFoundException e) {
-        //     exit();
-        //     e.printStackTrace();
-        // }
-    }
-
-    private void exit() {
-        try {
-            clientConnection.closeConnection();
-        } catch (IOException e) {
+            // Send all board states for that game ID
+            List<BoardStateMsg> boardStateMsgs = dbQueuer.retrieveGameStates(replayFetchMsg.getGameID());
+            clientConnection.sendMessage(new ReplayFetchMsg(boardStateMsgs));
+        }
+        catch (IOException | ClassNotFoundException e)
+        {
             e.printStackTrace();
         }
+        finally
+        {
+            //? Close database connection
+            dbQueuer.dbClose();
+        }
+
     }
 }

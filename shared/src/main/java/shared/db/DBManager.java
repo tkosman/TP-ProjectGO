@@ -6,8 +6,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Date;
+import java.util.HashMap;
 
 
 //? Singleton
@@ -68,5 +71,28 @@ public class DBManager {
         }
     }
 
+    public Map<Integer, Date> getAllGameIDsAndDates() throws SQLException {
+        Map<Integer, Date> gameIdAndDates = new HashMap<>();
+        String query = "SELECT DISTINCT game_id, MAX(date) as max_date FROM replays GROUP BY game_id ORDER BY game_id";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    int gameId = resultSet.getInt("game_id");
+                    Date date = resultSet.getDate("max_date");
+                    gameIdAndDates.put(gameId, date);
+                }
+            }
+        }
+        return gameIdAndDates;
+    }
+
+    public void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     
 }
