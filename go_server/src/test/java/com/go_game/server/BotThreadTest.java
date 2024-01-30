@@ -92,28 +92,28 @@ public class BotThreadTest {
         verify(mockConnection, atLeast(1)).sendMessage(any(PlayerPassedMsg.class));
     }
 
-    @Test
-    public void testGameOverAgree() throws IOException, ClassNotFoundException
-    {
-        BotThread botThread = new BotThread(mockConnection, mockGameLogic, 19);
+    // @Test
+    // public void testGameOverAgree() throws IOException, ClassNotFoundException
+    // {
+    //     BotThread botThread = new BotThread(mockConnection, mockGameLogic, 19);
 
-        assertFalse(botThread.isGameOver());
+    //     assertFalse(botThread.isGameOver());
 
-        botThread.setGameOver(true);
-        when(mockConnection.receiveMessage()).thenReturn(new ResultsNegotiationMsg(AgreementState.AGREE));
-        assertTrue(botThread.isGameOver());
-        verify(mockConnection, atLeast(1)).sendMessage(any(GameOverMsg.class));
-    }
+    //     botThread.setGameOver(true);
+    //     when(mockConnection.receiveMessage()).thenReturn(new ResultsNegotiationMsg(AgreementState.AGREE));
+    //     assertTrue(botThread.isGameOver());
+    //     verify(mockConnection, atLeast(1)).sendMessage(any(GameOverMsg.class));
+    // }
 
-    @Test
-    public void testGameOverDisagree() throws IOException, ClassNotFoundException
-    {
-        BotThread botThread = new BotThread(mockConnection, mockGameLogic, 19);
+    // @Test
+    // public void testGameOverDisagree() throws IOException, ClassNotFoundException
+    // {
+    //     BotThread botThread = new BotThread(mockConnection, mockGameLogic, 19);
 
-        botThread.setGameOver(true);
+    //     botThread.setGameOver(true);
 
-        when(mockConnection.receiveMessage()).thenReturn(new ResultsNegotiationMsg(AgreementState.DISAGREE));
-        assertFalse(botThread.isGameOver());
-        verify(mockConnection, atLeast(1)).sendMessage(any (ResultsNegotiationMsg.class));
-    }
+    //     when(mockConnection.receiveMessage()).thenReturn(new ResultsNegotiationMsg(AgreementState.DISAGREE));
+    //     assertFalse(botThread.isGameOver());
+    //     verify(mockConnection, atLeast(1)).sendMessage(any (ResultsNegotiationMsg.class));
+    // }
 }

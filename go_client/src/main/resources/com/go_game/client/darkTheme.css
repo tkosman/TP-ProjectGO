@@ -79,3 +79,20 @@ Axis {
 .list-cell:filled:hover {
     -fx-text-fill: #af00ff;
 }
+
+.text-field {
+    -fx-prompt-text-fill: #ffffff;
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #af00ff;
+    -fx-border-width: 2;
+    -fx-background-radius: 0;
+}
+
+.text-field:hover {
+    -fx-background-color: #3a3a3a;
+}
+
+.text-field:focused {
+    -fx-background-color: #3a3a3a;
+}
