@@ -79,7 +79,7 @@ To run tests, run the following command
 ## Project Team Members
 
 ### Backend Development
-- <a href="https://github.com/tkosman">@tkosman</a>: Responsible for all backend development aspects of the project. This includes database management, server-side logic, API integration, and ensuring scalability and security of the backend infrastructure.
+- <a href="https://github.com/tkosman">tkosman</a>: Responsible for all backend development aspects of the project. This includes database management, server-side logic, API integration, and ensuring scalability and security of the backend infrastructure.
 
 ### Frontend Development
-- <a href="https://github.com/wyz3r0">@Wyzero</a> Handles all frontend development tasks. This includes designing user interfaces, implementing user experience designs and integrating with backend services to provide a seamless user experience.
+- <a href="https://github.com/wyz3r0">Wyzero</a>: Handles all frontend development tasks. This includes designing user interfaces, implementing user experience designs and integrating with backend services to provide a seamless user experience.
