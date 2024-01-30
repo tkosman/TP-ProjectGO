@@ -88,7 +88,7 @@ public class MultiplayerGameThread implements Runnable
             {
                 logGameState();
                 MoveMsg moveMsg = receiveMove();
-                if (moveMsg.getUnusualMove() != UnusualMove.RESIGN)
+                if (moveMsg.getUnusualMove() == UnusualMove.RESIGN)
                 {
                     //? player RESIGNED
                     gameOver = true;
