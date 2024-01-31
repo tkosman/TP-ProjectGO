@@ -60,7 +60,7 @@ import shared.messages.PlayerPassedMsg;
 import shared.messages.PlayerResignedMsg;
 import shared.messages.ResultsNegotiationMsg;
 
-public class MultiplayerGameController {
+public class GameController {
     private static final int CIRCLE_RADIUS = 15;
     private static final int SPACING = 5;
     private int GRID_SIZE;
@@ -781,7 +781,7 @@ public class MultiplayerGameController {
     }
 
 
-    public MultiplayerGameController(Client client, GameMode gameMode) {
+    public GameController(Client client, GameMode gameMode) {
         this.gameMode = gameMode;
         this.client = client;
     }

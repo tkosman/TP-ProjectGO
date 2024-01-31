@@ -17,6 +17,7 @@ import shared.messages.ReplayFetchMsg;
 public class ReplayThread implements Runnable {
     private DBQueuer dbQueuer;
     private ClientConnection clientConnection;
+    private Thread fred;
 
     /**
      * Constructs a ReplayThread object with the specified client connection.
@@ -27,7 +28,8 @@ public class ReplayThread implements Runnable {
     public ReplayThread(ClientConnection clientConnection) 
     {
         this.dbQueuer = new DBQueuer(new DBManager());
-        Thread fred = new Thread(this);
+        this.clientConnection = clientConnection;
+        fred = new Thread(this);
         fred.start();
     }
 
