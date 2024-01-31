@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <HBox fx:id="mainHBox" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@darkTheme.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -60,11 +61,31 @@
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </padding>
             </VBox>
-            <Button fx:id="selectReplayButton" mnemonicParsing="false" text="select different replay">
+            <Button fx:id="selectReplayButton" mnemonicParsing="false" onAction="#selectReplay" text="select different replay">
                <VBox.margin>
                   <Insets top="5.0" />
                </VBox.margin>
             </Button>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="5.0">
+               <children>
+                  <Button fx:id="moveBackButton" mnemonicParsing="false" onAction="#moveBack" prefHeight="55.0" prefWidth="55.0" text="←" textAlignment="CENTER">
+                     <HBox.margin>
+                        <Insets left="5.0" top="5.0" />
+                     </HBox.margin>
+                     <font>
+                        <Font name="System Bold" size="22.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="moveForwardButton" mnemonicParsing="false" onAction="#moveForward" prefHeight="55.0" prefWidth="55.0" text="→" textAlignment="CENTER">
+                     <HBox.margin>
+                        <Insets right="5.0" top="5.0" />
+                     </HBox.margin>
+                     <font>
+                        <Font size="22.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
          </children>
       </VBox>
    </children>

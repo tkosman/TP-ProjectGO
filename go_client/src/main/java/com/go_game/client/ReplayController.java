@@ -1,18 +1,25 @@
 package com.go_game.client;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.ResourceBundle;
+
+import com.go_game.client.connection.Client;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -24,17 +31,27 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 import javafx.stage.StageStyle;
+import shared.enums.GameMode;
+import shared.enums.Stone;
+import shared.messages.BoardStateMsg;
+import shared.messages.ClientInfoMsg;
+import shared.messages.IndexSetMsg;
+import shared.messages.ReplayFetchMsg;
 
 public class ReplayController {
+    private static final int PORT = 4444;
+    private static final String HOST = "localhost";
+
+    private Client client;
+    private List<BoardStateMsg> moveList;
+    private int boardSize = -1;
+    private int movePointer;
 
     @FXML
     private ResourceBundle resources;
 
     @FXML
     private URL location;
-
-    @FXML
-    private AnchorPane boardAnchorPane;
 
     @FXML
     private HBox boardHBox;
@@ -49,7 +66,13 @@ public class ReplayController {
     private HBox mainHBox;
 
     @FXML
+    private Button moveBackButton;
+
+    @FXML
     private ListView<?> moveBoardListView;
+
+    @FXML
+    private Button moveForwardButton;
 
     @FXML
     private Label oponentNameLabel;
@@ -69,12 +92,13 @@ public class ReplayController {
 
     @FXML
     void initialize() {
-        assert boardAnchorPane != null : "fx:id=\"boardAnchorPane\" was not injected: check your FXML file 'replay.fxml'.";
         assert boardHBox != null : "fx:id=\"boardHBox\" was not injected: check your FXML file 'replay.fxml'.";
         assert controllsVBox != null : "fx:id=\"controllsVBox\" was not injected: check your FXML file 'replay.fxml'.";
         assert exitButton != null : "fx:id=\"exitButton\" was not injected: check your FXML file 'replay.fxml'.";
         assert mainHBox != null : "fx:id=\"mainHBox\" was not injected: check your FXML file 'replay.fxml'.";
+        assert moveBackButton != null : "fx:id=\"moveBackButton\" was not injected: check your FXML file 'replay.fxml'.";
         assert moveBoardListView != null : "fx:id=\"moveBoardListView\" was not injected: check your FXML file 'replay.fxml'.";
+        assert moveForwardButton != null : "fx:id=\"moveForwardButton\" was not injected: check your FXML file 'replay.fxml'.";
         assert oponentNameLabel != null : "fx:id=\"oponentNameLabel\" was not injected: check your FXML file 'replay.fxml'.";
         assert oponentScoreLabel != null : "fx:id=\"oponentScoreLabel\" was not injected: check your FXML file 'replay.fxml'.";
         assert playerNameLabel != null : "fx:id=\"playerNameLabel\" was not injected: check your FXML file 'replay.fxml'.";
@@ -82,24 +106,16 @@ public class ReplayController {
         assert selectReplayButton != null : "fx:id=\"selectReplayButton\" was not injected: check your FXML file 'replay.fxml'.";
 
 
-        //! for testing
-        List<List<String>> sampleList = Arrays.asList(
-            Arrays.asList("1", "2024-01-20 19-23"),
-            Arrays.asList("2", "2024-01-21 13-41"),
-            Arrays.asList("3", "2024-01-21 21-37")
-        );
-
-        // TODO: get replays from server
-
-        replayAlert(sampleList);
-
-        selectReplayButton.setOnAction(event -> replayAlert(sampleList));
+        selectReplay();
     }
+
 
     private void initializeBoard(int boardSize) {
         final int gridSize = boardSize;
         final int circleRadius = 15;
         final int spacing = 5;
+
+        boardHBox.getChildren().clear();
 
         boardHBox.setSpacing(spacing);
         boardHBox.setAlignment(Pos.CENTER);
@@ -152,45 +168,60 @@ public class ReplayController {
         }
     }
 
-    private void replayAlert(List<List<String>> replayList) {
-        Alert alert = new Alert(Alert.AlertType.NONE, "", ButtonType.CLOSE);
+    private void replayAlert(Map<Integer, Date> replayList) {
+        ButtonType cancelButton = new ButtonType("cancel", ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(Alert.AlertType.NONE, "", cancelButton);
         alert.initStyle(StageStyle.UNDECORATED);
         alert.getDialogPane().getStylesheets().add(getClass().getResource("darkTheme.css").toExternalForm());
         alert.getDialogPane().setPrefSize(300, 300);
 
-        ListView<String> listView = new ListView<>();
-        ObservableList<String> items = FXCollections.observableArrayList();
-
-        for (List<String> entry : replayList) {
-            items.add(String.join("  |  ", entry));
-        }
-
-        listView.setItems(items);
-
-        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                // TODO: get replay string from server
-
-                boardHBox.getChildren().clear();
-                // TODO: pass board size to initializeBoard() 
-                initializeBoard(9);
-                alert.close();
-            }
-        });
-
-        VBox vBox = new VBox(listView);
-        alert.getDialogPane().setContent(vBox);
-
-        alert.setOnCloseRequest(event -> {
-            if (boardHBox.getChildren().isEmpty()) {
+        Button cancelBtn = (Button) alert.getDialogPane().lookupButton(cancelButton);
+        cancelBtn.addEventFilter(ActionEvent.ACTION, event -> {
+            if (boardSize == -1) {
                 exit();
             }
         });
+    
+        ListView<String> listView = new ListView<>();
+        ObservableList<String> items = FXCollections.observableArrayList();
+    
+        // Use Java Streams to iterate over the entry set and create a formatted string
+        replayList.entrySet().stream().map(entry -> entry.getKey() + "  |  " + entry.getValue()).forEach(items::add);
+    
+        listView.setItems(items);
+    
+        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                // TODO: get replay string from server
+                try {
+                    System.out.println(newValue.split("\\s*\\|\\s*")[0]);
 
-        Platform.runLater(() -> {
-            alert.showAndWait();
+                    client.sendMessage(new ReplayFetchMsg(Integer.parseInt(newValue.split("\\s*\\|\\s*")[0])));
+
+                    ReplayFetchMsg moveListMessage = (ReplayFetchMsg) client.receiveMessage();
+
+                    moveList = moveListMessage.getReplaysList();
+                    boardSize = moveList.get(0).getBoardState().length;
+
+                } catch (NumberFormatException | IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    exit();
+                }
+    
+                boardHBox.getChildren().clear();
+                // TODO: pass board size to initializeBoard() 
+                initializeBoard(boardSize);
+                alert.close();
+            }
         });
+    
+        VBox vBox = new VBox(listView);
+        alert.getDialogPane().setContent(vBox);
+    
+        Platform.runLater(() -> alert.showAndWait());
     }
+    
 
     // TODO: change it to outline last placed stone
     // private ChangeListener<Boolean> createHoverChangeListener(Circle circle, int y) {
@@ -218,9 +249,79 @@ public class ReplayController {
     //     };
     // }
 
+    protected void setBoard(Stone[][] state) {
+        Platform.runLater(() -> {
+            for (int i = 1; i <= boardSize; i++) {
+                for (int j = 1; j <= boardSize; j++) {
+                    Color color;
+
+                    if (state[i - 1][j - 1] == Stone.BLACK) color = Color.BLACK;
+                    else if (state[i - 1][j - 1] == Stone.WHITE) color = Color.WHITE;
+                    else color = Color.web("#3E3E3E");
+
+                    ((Circle) ((VBox) boardHBox.getChildren().get(i)).getChildren().get(j)).setFill(color);
+                }
+            }
+        });
+    }
+
+    @FXML
+    void selectReplay() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    client = new Client(new Socket(HOST, PORT));
+                    client.receiveMessage();
+    
+                    client.sendMessage(new ClientInfoMsg(GameMode.REPLAY));
+    
+                    ReplayFetchMsg replayList = (ReplayFetchMsg) client.receiveMessage();
+    
+                    Platform.runLater(() -> {
+                        replayAlert(replayList.getGameIDsAndDates());
+                        
+                        initializeBoard(boardSize);
+                    });
+    
+                    setBoard(moveList.get(0).getBoardState());
+
+                    movePointer = 0;
+
+                } catch (ClassNotFoundException | IOException e) {
+                    e.printStackTrace();
+                    exit();
+                }
+            }
+        }).start();
+    }
+
+    @FXML
+    void moveBack() {
+        if (movePointer > 0) {
+            movePointer--;
+        }
+
+        setBoard(moveList.get(movePointer).getBoardState());
+    }
+
+    @FXML
+    void moveForward() {
+        if (movePointer < moveList.size()) {
+            movePointer++;
+        }
+
+        setBoard(moveList.get(movePointer).getBoardState());
+    }
+
     @FXML
     void exit() {
         try {
+            try {
+                client.closeConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             App.setRoot("menu", this, new MenuController());
         } catch (IOException e) {
             e.printStackTrace();
