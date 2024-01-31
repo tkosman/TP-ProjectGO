@@ -480,9 +480,18 @@ public class GameController {
                                                     resImageView.setImage(new Image(App.class.getResourceAsStream("looser.png")));
                                                 }
 
-                                                Label yourFinalScoreLabel = new Label(Float.toString(playerFinalScore));
+                                                HBox imageViewHBox = new HBox(resImageView);
+                                                imageViewHBox.setAlignment(Pos.TOP_CENTER);
+
+                                                Label yourFinalScoreLabel = new Label("Your final score: " + Float.toString(playerFinalScore));
+                                                yourFinalScoreLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
                                                 
                                                 Button ok = new Button("ok");
+                                                ok.setPrefWidth(55.0);
+                                                
+                                                HBox okHBox = new HBox(ok);
+                                                okHBox.setAlignment(Pos.BOTTOM_RIGHT);
+
                                                 ok.setOnAction(event -> {
                                                     Platform.runLater(() -> {
                                                         closeAlert();
@@ -496,8 +505,9 @@ public class GameController {
                                                     }
                                                 });
 
-                                                VBox endScreen = new VBox(resImageView, yourFinalScoreLabel, ok);
-                                                
+                                                VBox endScreen = new VBox(10, imageViewHBox, yourFinalScoreLabel, okHBox);
+                                                endScreen.setPadding(new Insets(15));
+
                                                 alert.getDialogPane().setContent(endScreen);
                                             });
                                         } 
