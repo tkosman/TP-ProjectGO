@@ -1,6 +1,6 @@
 <h2 align="center">
   <br>
- <img src="go_client/src/main/resources/com/go_game/client/logo.png" alt="Logo" width="200">
+ <img src="go_client/src/main/resources/com/go_game/client/logo.png" alt="Logo" width="300">
   <br>
   Java GO Game
   <br>
