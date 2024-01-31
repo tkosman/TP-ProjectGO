@@ -304,6 +304,10 @@ public class GameController {
             PlayerPassedMsg playerPassedMsg = (PlayerPassedMsg) message;
             PlayerColors playerColor = playerPassedMsg.getPlayerColor();
             switchTurns();
+
+            if (isMyTurn()) {
+                setStatus("your turn", Color.BLUEVIOLET);
+            }
             //TODO: status
         }
         else if (message.getType() == MessageType.PLAYER_RESIGNED)
@@ -421,6 +425,9 @@ public class GameController {
 
                         ResultsNegotiationMsg response = (ResultsNegotiationMsg) getClient().receiveMessage();
                         //TODO: popup my suggestion, oponent's sugestion nad calculated score and ask if accepted
+
+                        Label scoreTitlLabel = new Label("Scores:");
+                        scoreTitlLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
 
                         Label oponentsCalculatedLabel = new Label("Opponent's calculated score : " + oponentsScore);
                         Label oponentsPropositionLabel = new Label("Opponent's proposing : " + response.getPlayerProposition());
@@ -558,8 +565,6 @@ public class GameController {
                                         currentPlayerColor = oponentsAgreement.getWhoseTurn();
                                         isNegotiating = false;
 
-                                        System.out.println("DUPA");
-
                                         Platform.runLater(() -> {
                                             closeAlert();
                                         });
@@ -594,8 +599,14 @@ public class GameController {
                         });
 
                         HBox buttons = new HBox(10, agreeButton, disagreeButton);
+                        buttons.setAlignment(Pos.BOTTOM_RIGHT);
+                        buttons.setSpacing(5.0);
+                        buttons.setPadding(new Insets(15));
 
-                        VBox agreementDialog = new VBox(oponentsCalculatedLabel, oponentsPropositionLabel, playersCalculatedLabel, playersPropositionLabel, buttons);
+                        VBox agreementDialog = new VBox(10, scoreTitlLabel, oponentsCalculatedLabel, oponentsPropositionLabel, playersCalculatedLabel, playersPropositionLabel, buttons);
+                        agreementDialog.setAlignment(Pos.TOP_LEFT);
+                        agreementDialog.setSpacing(5.0);
+                        agreementDialog.setPadding(new Insets(15));
 
                         Platform.runLater(() -> {
                             alert.getDialogPane().setContent(agreementDialog);
@@ -649,6 +660,9 @@ public class GameController {
     }
 
     private Node waitingAnimation() {
+        VBox waitingVbox = new VBox(5);
+        waitingVbox.setAlignment(Pos.CENTER);
+
         Arc coloredArc = new Arc();
         coloredArc.setCenterX(50);
         coloredArc.setCenterY(50);
@@ -680,7 +694,9 @@ public class GameController {
         rotateTransition.setCycleCount(RotateTransition.INDEFINITE);
         rotateTransition.play();
 
-        return circle;
+        waitingVbox.getChildren().addAll(circle);
+
+        return waitingVbox;
     }
 
 
