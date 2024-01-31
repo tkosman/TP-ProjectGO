@@ -76,6 +76,20 @@ To run tests, run the following command
   ./test.sh
 ```
 
+## Init MariaDB database
+```mysql
+  CREATE DATABASE go_replays;
+  USE go_replays;
+  CREATE TABLE replays (
+    id INT AUTO_INCREMENT,
+    game_id INT NOT NULL,
+    move_number INT NOT NULL,
+    state BLOB NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+```
+
 ## Project Team Members
 
 ### Backend Development
