@@ -329,7 +329,7 @@ public class GameController {
             System.out.println("Sorry sth went wrong :(");
             setStatus("something went wrong", Color.RED);
         }
-        else if (message.getType() == MessageType.RESULTS_NEGOTIATION)
+        else if (message.getType() == MessageType.RESULTS_NEGOTIATION && !resigned)
         {
             //TODO: message contains (description, territoryScore, capturedStones) int[2]\
             ResultsNegotiationMsg resultsNegotiation = (ResultsNegotiationMsg) message;
