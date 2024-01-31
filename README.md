@@ -1,6 +1,6 @@
 <h2 align="center">
   <br>
- <img src="go_client/src/main/resources/com/go_game/client/logo.png" alt="Logo" width="200">
+ <img src="go_client/src/main/resources/com/go_game/client/logo.png" alt="Logo" width="300">
   <br>
   Java GO Game
   <br>
@@ -74,6 +74,20 @@ To run tests, run the following command
 ```bash
   chmod +x ./test.sh
   ./test.sh
+```
+
+## Init MariaDB database
+```mysql
+  CREATE DATABASE go_replays;
+  USE go_replays;
+  CREATE TABLE replays (
+    id INT AUTO_INCREMENT,
+    game_id INT NOT NULL,
+    move_number INT NOT NULL,
+    state BLOB NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
 ```
 
 ## Project Team Members

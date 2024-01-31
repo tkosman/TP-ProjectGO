@@ -1,24 +1,23 @@
 package com.go_game.server;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import shared.enums.AgreementState;
 import shared.enums.PlayerColors;
-import shared.messages.BoardStateMsg;
-import shared.messages.GameOverMsg;
 import shared.messages.MoveMsg;
 import shared.messages.MoveNotValidMsg;
 import shared.messages.PlayerPassedMsg;
-import shared.messages.ResultsNegotiationMsg;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
-import java.io.IOException;
 
 @ExtendWith(MockitoExtension.class)
 public class BotThreadTest {
